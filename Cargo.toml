@@ -1,0 +1,4 @@
+[package]
+name = "caldav"
+version = "0.1.0"
+authors = ["Sanpi <sanpi@homecomputing.fr>"]
