@@ -2,3 +2,7 @@
 name = "caldav"
 version = "0.1.0"
 authors = ["Sanpi <sanpi@homecomputing.fr>"]
+
+[dependencies]
+hyper = "0.10"
+hyper-native-tls = "0.2"
