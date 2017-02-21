@@ -6,3 +6,6 @@ authors = ["Sanpi <sanpi@homecomputing.fr>"]
 [dependencies]
 hyper = "0.10"
 hyper-native-tls = "0.2"
+sxd-document = "0.2"
+sxd-xpath = { git = "https://github.com/shepmaster/sxd-xpath.git" }
+url = { git = "https://github.com/servo/rust-url" }

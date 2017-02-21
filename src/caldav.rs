@@ -1,140 +1,79 @@
-use hyper::header::Headers;
+use ::Children;
+use ::Requestable;
+use std::collections::HashMap;
 use std::convert::Into;
-use std::io::prelude::*;
 
 pub struct Caldav {
     url: String,
-    http: ::hyper::client::Client,
     auth: Option<::hyper::header::Authorization<::hyper::header::Basic>>,
+}
+
+impl ::Requestable for Caldav {
+    fn get_auth(&self) -> Option<::Authorization> {
+        self.auth.clone()
+    }
+
+    fn set_raw_auth(&mut self, auth: Option<::Authorization>) {
+        self.auth = auth;
+    }
+}
+
+impl ::Xmlable for Caldav {
+    fn get_url(&self) -> String {
+        self.url.clone()
+    }
+}
+
+impl ::Children for Caldav {
+    fn new<S>(url: S) -> Self where S: Into<String> {
+        Caldav {
+            url: url.into(),
+            auth: None,
+        }
+    }
 }
 
 impl Caldav {
     pub fn new<S>(url: S) -> Self where S: Into<String> {
-        let ssl = ::hyper_native_tls::NativeTlsClient::new().unwrap();
-        let connector = ::hyper::net::HttpsConnector::new(ssl);
-        let client = ::hyper::client::Client::with_connector(connector);
-
         Caldav {
             url: url.into(),
-            http: client,
             auth: None,
         }
     }
 
-    pub fn set_auth<S>(&mut self, username: S, password: Option<S>) where S: Into<String> {
-        let password = match password {
-            Some(password) => Some(password.into()),
-            None => None,
-        };
-
-        self.auth = Some(
-            ::hyper::header::Authorization(
-                ::hyper::header::Basic {
-                    username: username.into(),
-                    password: password,
-                }
-            )
-        );
-    }
-
-    pub fn principals(&self) -> ::result::Result<String> {
-        self.propfind("/", r#"
+    pub fn principals(&self) -> ::result::Result<Vec<::principal::Principal>> {
+        let response = self.propfind(self.url.clone(), r#"
 <d:propfind xmlns:d="DAV:">
     <d:prop>
         <d:current-user-principal />
     </d:prop>
 </d:propfind>
-"#)
-    }
+"#);
 
-    pub fn calendars<S>(&self, href: S) -> ::result::Result<String> where S: Into<String> {
-        self.propfind(href, r#"
-<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
-  <d:prop>
-     <d:resourcetype />
-     <d:displayname />
-     <cs:getctag />
-     <c:supported-calendar-component-set />
-  </d:prop>
-</d:propfind>
-"#)
-    }
-
-    pub fn events<S>(&self, href: S) -> ::result::Result<String> where S: Into<String> {
-        self.propfind(href, r#"
-<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
-  <d:prop>
-     <d:resourcetype />
-  </d:prop>
-</d:propfind>
-"#)
-    }
-
-    pub fn tasks<S>(&self, href: S) -> ::result::Result<String> where S: Into<String> {
-        let mut headers = ::hyper::header::Headers::new();
-
-        headers.set_raw("Depth", vec![b"1".to_vec()]);
-
-        self.report(href, r#"
-<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:prop>
-        <d:getetag />
-        <c:calendar-data />
-    </d:prop>
-    <c:filter>
-        <c:comp-filter name="VCALENDAR">
-            <c:comp-filter name="VTODO" />
-        </c:comp-filter>
-    </c:filter>
-</c:calendar-query>
-"#, Some(headers))
-    }
-
-    pub fn event<S>(&self, href: S) -> ::result::Result<String> where S: Into<String> {
-        self.get(href)
-    }
-
-    fn get<S>(&self, href: S) -> ::result::Result<String> where S: Into<String> {
-        self.request("GET", href, None, None)
-    }
-
-    fn propfind<S>(&self, href: S, body: &str) -> ::result::Result<String> where S: Into<String> {
-        self.request("PROPFIND", href, Some(body), None)
-    }
-
-    fn report<S>(&self, href: S, body: &str, headers: Option<Headers>) -> ::result::Result<String> where S: Into<String> {
-        self.request("REPORT", href, Some(body), headers)
-    }
-
-    fn request<S>(&self, method: &str, href: S, body: Option<&str>, headers: Option<Headers>) -> ::result::Result<String> where S: Into<String> {
-        let mut content = String::new();
-        let method = ::hyper::method::Method::Extension(method.into());
-
-        let mut headers = match headers {
-            Some(headers) => headers,
-            None =>  ::hyper::header::Headers::new(),
-        };
-
-        if let Some(auth) = self.auth.clone() {
-            headers.set(auth);
+        match response {
+            Ok(response) => Ok(self.to_vec(response.as_str(), "//d:current-user-principal/d:href/text()")),
+            Err(err) => Err(err),
         }
+    }
 
-        let url = format!("{}/{}", &self.url, href.into());
-        let mut request = self.http.request(method, &url)
-            .headers(headers);
-
-        if let Some(body) = body {
-            request = request.body(body);
+    fn principal(&self) -> ::result::Result<::principal::Principal> {
+        match self.principals() {
+            Ok(p) => Ok(p[0].clone()),
+            Err(err) => Err(err),
         }
+    }
 
-        let mut response = request.send()?;
+    fn home(&self) -> ::result::Result<Vec<::home::Home>> {
+        match self.principal() {
+            Ok(principal) => principal.home(),
+            Err(err) => Err(err),
+        }
+    }
 
-        match response.status {
-            ::hyper::status::StatusCode::MultiStatus | ::hyper::status::StatusCode::Ok => {
-                response.read_to_string(&mut content)?;
-                Ok(content)
-            },
-            _ => Err(::result::Error::new(format!("{}", response.status))),
+    pub fn calendars(&self) -> ::result::Result<HashMap<String, ::calendar::Calendar>> {
+        match self.home() {
+            Ok(home) => home[0].calendars(),
+            Err(err) => Err(err),
         }
     }
 }
