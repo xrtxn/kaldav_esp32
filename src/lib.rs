@@ -1,12 +1,12 @@
 extern crate hyper;
 extern crate hyper_native_tls;
+extern crate ical_parser;
 extern crate sxd_document;
 extern crate sxd_xpath;
 extern crate url;
 
 pub mod caldav;
 pub mod calendar;
-pub mod event;
 pub mod home;
 pub mod principal;
 pub mod result;
