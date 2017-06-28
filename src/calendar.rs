@@ -33,7 +33,7 @@ impl ::Children for Calendar {
 }
 
 impl Calendar {
-    pub fn events(&self) -> ::result::Result<Vec<::ical_parser::Event>> {
+    pub fn events(&self) -> ::result::Result<Vec<::event::Event>> {
         let response = self.request("VEVENT");
 
         match response {
@@ -42,7 +42,7 @@ impl Calendar {
         }
     }
 
-    pub fn tasks(&self) -> ::result::Result<Vec<::ical_parser::Todo>> {
+    pub fn tasks(&self) -> ::result::Result<Vec<::event::Todo>> {
         let response = self.request("VTODO");
 
         match response {
