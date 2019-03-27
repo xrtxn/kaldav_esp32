@@ -1,5 +1,3 @@
-#![feature(try_from)]
-
 extern crate reqwest;
 extern crate ical_parser;
 extern crate sxd_document;
