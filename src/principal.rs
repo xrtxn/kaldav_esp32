@@ -1,30 +1,30 @@
-use ::Children;
-use ::Requestable;
+use crate::Children;
+use crate::Requestable;
 use std::convert::Into;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Principal {
     url: String,
-    auth: Option<::Authorization>,
+    auth: Option<crate::Authorization>,
 }
 
-impl ::Requestable for Principal {
-    fn get_auth(&self) -> Option<::Authorization> {
+impl crate::Requestable for Principal {
+    fn get_auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
 
-    fn set_auth(&mut self, auth: Option<::Authorization>) {
+    fn set_auth(&mut self, auth: Option<crate::Authorization>) {
         self.auth = auth;
     }
 }
 
-impl ::Xmlable for Principal {
+impl crate::Xmlable for Principal {
     fn get_url(&self) -> String {
         self.url.clone()
     }
 }
 
-impl ::Children for Principal {
+impl crate::Children for Principal {
     fn new<S>(url: S) -> Self where S: Into<String> {
         Principal {
             url: url.into(),
@@ -34,7 +34,7 @@ impl ::Children for Principal {
 }
 
 impl Principal {
-    pub fn home(&self) -> ::result::Result<Vec<::home::Home>> {
+    pub fn home(&self) -> crate::result::Result<Vec<crate::home::Home>> {
         let response = self.propfind(self.url.clone(), r#"
 <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop>

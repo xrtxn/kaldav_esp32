@@ -1,29 +1,29 @@
-use ::Children;
-use ::Requestable;
+use crate::Children;
+use crate::Requestable;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Calendar {
     url: String,
-    auth: Option<::Authorization>,
+    auth: Option<crate::Authorization>,
 }
 
-impl ::Requestable for Calendar {
-    fn get_auth(&self) -> Option<::Authorization> {
+impl crate::Requestable for Calendar {
+    fn get_auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
 
-    fn set_auth(&mut self, auth: Option<::Authorization>) {
+    fn set_auth(&mut self, auth: Option<crate::Authorization>) {
         self.auth = auth;
     }
 }
 
-impl ::Xmlable for Calendar {
+impl crate::Xmlable for Calendar {
     fn get_url(&self) -> String {
         self.url.clone()
     }
 }
 
-impl ::Children for Calendar {
+impl crate::Children for Calendar {
     fn new<S>(url: S) -> Self where S: Into<String> {
         Calendar {
             url: url.into(),
@@ -33,7 +33,7 @@ impl ::Children for Calendar {
 }
 
 impl Calendar {
-    pub fn events(&self) -> ::result::Result<Vec<::event::Event>> {
+    pub fn events(&self) -> crate::result::Result<Vec<crate::event::Event>> {
         let response = self.request("VEVENT");
 
         match response {
@@ -42,7 +42,7 @@ impl Calendar {
         }
     }
 
-    pub fn tasks(&self) -> ::result::Result<Vec<::event::Todo>> {
+    pub fn tasks(&self) -> crate::result::Result<Vec<crate::event::Todo>> {
         let response = self.request("VTODO");
 
         match response {
@@ -51,7 +51,7 @@ impl Calendar {
         }
     }
 
-    fn request(&self, filter: &str) -> ::result::Result<String> {
+    fn request(&self, filter: &str) -> crate::result::Result<String> {
         let body = format!(r#"
 <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
     <d:prop>

@@ -1,6 +1,6 @@
 use std::convert::{ Into, From };
 
-pub type Result<T> = ::std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, PartialEq)]
 pub struct Error {
@@ -15,16 +15,16 @@ impl Error {
     }
 }
 
-impl From<::reqwest::Error> for Error {
-    fn from(err: ::reqwest::Error) -> Error {
+impl From<reqwest::Error> for Error {
+    fn from(err: reqwest::Error) -> Error {
         Error {
             message: format!("{}", err),
         }
     }
 }
 
-impl From<::std::io::Error> for Error {
-    fn from(err: ::std::io::Error) -> Error {
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Error {
         Error {
             message: format!("{}", err),
         }

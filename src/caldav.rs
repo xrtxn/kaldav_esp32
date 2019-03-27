@@ -1,30 +1,30 @@
-use ::Children;
-use ::Requestable;
+use crate::Children;
+use crate::Requestable;
 use std::collections::HashMap;
 use std::convert::Into;
 
 pub struct Caldav {
     url: String,
-    auth: Option<::Authorization>,
+    auth: Option<crate::Authorization>,
 }
 
-impl ::Requestable for Caldav {
-    fn get_auth(&self) -> Option<::Authorization> {
+impl crate::Requestable for Caldav {
+    fn get_auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
 
-    fn set_auth(&mut self, auth: Option<::Authorization>) {
+    fn set_auth(&mut self, auth: Option<crate::Authorization>) {
         self.auth = auth;
     }
 }
 
-impl ::Xmlable for Caldav {
+impl crate::Xmlable for Caldav {
     fn get_url(&self) -> String {
         self.url.clone()
     }
 }
 
-impl ::Children for Caldav {
+impl crate::Children for Caldav {
     fn new<S>(url: S) -> Self where S: Into<String> {
         Caldav {
             url: url.into(),
@@ -41,7 +41,7 @@ impl Caldav {
         }
     }
 
-    pub fn principals(&self) -> ::result::Result<Vec<::principal::Principal>> {
+    pub fn principals(&self) -> crate::result::Result<Vec<crate::principal::Principal>> {
         let response = self.propfind(self.url.clone(), r#"
 <d:propfind xmlns:d="DAV:">
     <d:prop>
@@ -56,21 +56,21 @@ impl Caldav {
         }
     }
 
-    fn principal(&self) -> ::result::Result<::principal::Principal> {
+    fn principal(&self) -> crate::result::Result<crate::principal::Principal> {
         match self.principals() {
             Ok(p) => Ok(p[0].clone()),
             Err(err) => Err(err),
         }
     }
 
-    fn home(&self) -> ::result::Result<Vec<::home::Home>> {
+    fn home(&self) -> crate::result::Result<Vec<crate::home::Home>> {
         match self.principal() {
             Ok(principal) => principal.home(),
             Err(err) => Err(err),
         }
     }
 
-    pub fn calendars(&self) -> ::result::Result<HashMap<String, ::calendar::Calendar>> {
+    pub fn calendars(&self) -> crate::result::Result<HashMap<String, crate::calendar::Calendar>> {
         match self.home() {
             Ok(home) => home[0].calendars(),
             Err(err) => Err(err),
