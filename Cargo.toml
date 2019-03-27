@@ -5,7 +5,7 @@ authors = ["Sanpi <sanpi@homecomputing.fr>"]
 
 [dependencies]
 reqwest = "0.9"
-sxd-document = "0.2"
+sxd-document = "0.3"
 sxd-xpath = "0.4"
 url = "1.5"
 
