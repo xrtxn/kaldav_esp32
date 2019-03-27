@@ -12,7 +12,7 @@ impl ::Requestable for Calendar {
         self.auth.clone()
     }
 
-    fn set_raw_auth(&mut self, auth: Option<::Authorization>) {
+    fn set_auth(&mut self, auth: Option<::Authorization>) {
         self.auth = auth;
     }
 }

@@ -4,8 +4,7 @@ version = "0.1.0"
 authors = ["Sanpi <sanpi@homecomputing.fr>"]
 
 [dependencies]
-hyper = "0.10"
-hyper-native-tls = "0.2"
+reqwest = "0.9"
 sxd-document = "0.2"
 sxd-xpath = "0.4"
 url = "1.5"

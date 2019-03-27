@@ -1,7 +1,6 @@
 #![feature(try_from)]
 
-extern crate hyper;
-extern crate hyper_native_tls;
+extern crate reqwest;
 extern crate ical_parser;
 extern crate sxd_document;
 extern crate sxd_xpath;
@@ -17,27 +16,15 @@ pub mod result;
 use std::collections::HashMap;
 use std::io::prelude::*;
 
-type Authorization = ::hyper::header::Authorization<::hyper::header::Basic>;
+#[derive(Clone, Debug, PartialEq)]
+struct Authorization {
+    username: String,
+    password: Option<String>,
+}
 
-pub trait Requestable {
+trait Requestable {
     fn get_auth(&self) -> Option<Authorization>;
-    fn set_raw_auth(&mut self, auth: Option<Authorization>);
-
-    fn set_auth<S>(&mut self, username: S, password: Option<S>) where S: Into<String> {
-        let password = match password {
-            Some(password) => Some(password.into()),
-            None => None,
-        };
-
-        self.set_raw_auth(Some(
-            ::hyper::header::Authorization(
-                ::hyper::header::Basic {
-                    username: username.into(),
-                    password: password,
-                }
-            )
-        ));
-    }
+    fn set_auth(&mut self, auth: Option<Authorization>);
 
     fn get<S>(&self, href: S) -> ::result::Result<String> where S: Into<String> {
         self.request("GET", href, None, None)
@@ -48,45 +35,43 @@ pub trait Requestable {
     }
 
     fn report<S>(&self, href: S, body: &str) -> ::result::Result<String> where S: Into<String> {
-        let mut headers = ::hyper::header::Headers::new();
+        let mut headers = ::reqwest::header::HeaderMap::new();
 
-        headers.set_raw("Depth", vec![b"1".to_vec()]);
+        headers.insert("Depth", ::reqwest::header::HeaderValue::from_static("1"));
 
         self.request("REPORT", href, Some(body), Some(headers))
     }
 
-    fn request<S>(&self, method: &str, href: S, body: Option<&str>, headers: Option<::hyper::header::Headers>) -> ::result::Result<String> where S: Into<String>{
-        let ssl = ::hyper_native_tls::NativeTlsClient::new().unwrap();
-        let connector = ::hyper::net::HttpsConnector::new(ssl);
-        let http = ::hyper::client::Client::with_connector(connector);
+    fn request<S>(&self, method: &str, href: S, body: Option<&str>, headers: Option<::reqwest::header::HeaderMap>) -> ::result::Result<String> where S: Into<String>{
+        let http = ::reqwest::Client::new();
+        let mut request = http.request(::reqwest::Method::from_bytes(method.as_bytes()).unwrap(), &href.into());
 
         let mut content = String::new();
-        let method = ::hyper::method::Method::Extension(method.into());
 
-        let mut headers = match headers {
+        let headers = match headers {
             Some(headers) => headers,
-            None =>  ::hyper::header::Headers::new(),
+            None =>  ::reqwest::header::HeaderMap::new(),
         };
 
+
         if let Some(auth) = self.get_auth().clone() {
-            headers.set(auth);
+            request = request.basic_auth(auth.username, auth.password);
         }
 
-        let mut request = http.request(method, &href.into())
-            .headers(headers);
+        request = request.headers(headers);
 
         if let Some(body) = body {
-            request = request.body(body);
+            request = request.body(body.to_string());
         }
 
         let mut response = request.send()?;
 
-        match response.status {
-            ::hyper::status::StatusCode::MultiStatus | ::hyper::status::StatusCode::Ok => {
+        match response.status() {
+            ::reqwest::StatusCode::MULTI_STATUS | ::reqwest::StatusCode::OK => {
                 response.read_to_string(&mut content)?;
                 Ok(content)
             },
-            _ => Err(::result::Error::new(format!("{}", response.status))),
+            _ => Err(::result::Error::new(format!("{}", response.status()))),
         }
     }
 }
@@ -144,7 +129,7 @@ trait Children: Requestable + Xmlable {
                     self.append_host(x.clone())
                 );
 
-                element.set_raw_auth(self.get_auth());
+                element.set_auth(self.get_auth());
 
                 element
             })
@@ -164,7 +149,7 @@ trait Children: Requestable + Xmlable {
             let mut element = C::new(
                 self.append_host(values[0].clone())
             );
-            element.set_raw_auth(self.get_auth());
+            element.set_auth(self.get_auth());
 
             map.insert(key, element);
         }

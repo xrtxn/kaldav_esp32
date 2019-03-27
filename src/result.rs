@@ -15,8 +15,8 @@ impl Error {
     }
 }
 
-impl From<::hyper::Error> for Error {
-    fn from(err: ::hyper::Error) -> Error {
+impl From<::reqwest::Error> for Error {
+    fn from(err: ::reqwest::Error) -> Error {
         Error {
             message: format!("{}", err),
         }

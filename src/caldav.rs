@@ -5,7 +5,7 @@ use std::convert::Into;
 
 pub struct Caldav {
     url: String,
-    auth: Option<::hyper::header::Authorization<::hyper::header::Basic>>,
+    auth: Option<::Authorization>,
 }
 
 impl ::Requestable for Caldav {
@@ -13,7 +13,7 @@ impl ::Requestable for Caldav {
         self.auth.clone()
     }
 
-    fn set_raw_auth(&mut self, auth: Option<::Authorization>) {
+    fn set_auth(&mut self, auth: Option<::Authorization>) {
         self.auth = auth;
     }
 }
