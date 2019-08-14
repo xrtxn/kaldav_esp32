@@ -8,7 +8,7 @@ edition = "2018"
 reqwest = "0.9"
 sxd-document = "0.3"
 sxd-xpath = "0.4"
-url = "1.5"
+url = "2.0"
 
 [dependencies.ical-parser]
 version = "0.1"
