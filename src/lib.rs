@@ -1,9 +1,12 @@
-pub mod calendar;
-pub mod client;
-pub mod event;
-pub mod home;
-pub mod principal;
-pub mod result;
+mod calendar;
+mod client;
+mod event;
+mod home;
+mod principal;
+mod result;
+
+pub use client::*;
+pub use result::*;
 
 use std::collections::HashMap;
 use std::io::prelude::*;

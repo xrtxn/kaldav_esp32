@@ -10,11 +10,11 @@ struct Opt {
     url: String,
 }
 
-fn main() -> caldav::result::Result<()>
+fn main() -> caldav::Result<()>
 {
     let opt = Opt::from_args();
 
-    let mut client = caldav::client::Client::new(opt.url);
+    let mut client = caldav::Client::new(opt.url);
 
     if let Some(username) = opt.username {
         client.set_auth(Some(caldav::Authorization {
