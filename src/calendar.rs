@@ -33,7 +33,7 @@ impl crate::Children for Calendar {
 }
 
 impl Calendar {
-    pub fn events(&self) -> crate::result::Result<Vec<crate::event::Event>> {
+    pub fn events(&self) -> crate::Result<Vec<crate::Event>> {
         let response = self.request("VEVENT");
 
         match response {
@@ -42,7 +42,7 @@ impl Calendar {
         }
     }
 
-    pub fn tasks(&self) -> crate::result::Result<Vec<crate::event::Todo>> {
+    pub fn tasks(&self) -> crate::Result<Vec<crate::Todo>> {
         let response = self.request("VTODO");
 
         match response {
@@ -51,7 +51,7 @@ impl Calendar {
         }
     }
 
-    fn request(&self, filter: &str) -> crate::result::Result<String> {
+    fn request(&self, filter: &str) -> crate::Result<String> {
         let body = format!(r#"
 <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
     <d:prop>

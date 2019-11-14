@@ -41,7 +41,7 @@ impl Client {
         }
     }
 
-    pub fn principals(&self) -> crate::result::Result<Vec<crate::principal::Principal>> {
+    pub fn principals(&self) -> crate::Result<Vec<crate::Principal>> {
         let response = self.propfind(self.url.clone(), r#"
 <d:propfind xmlns:d="DAV:">
     <d:prop>
@@ -56,21 +56,21 @@ impl Client {
         }
     }
 
-    fn principal(&self) -> crate::result::Result<crate::principal::Principal> {
+    fn principal(&self) -> crate::Result<crate::Principal> {
         match self.principals() {
             Ok(p) => Ok(p[0].clone()),
             Err(err) => Err(err),
         }
     }
 
-    fn home(&self) -> crate::result::Result<Vec<crate::home::Home>> {
+    fn home(&self) -> crate::Result<Vec<crate::Home>> {
         match self.principal() {
             Ok(principal) => principal.home(),
             Err(err) => Err(err),
         }
     }
 
-    pub fn calendars(&self) -> crate::result::Result<HashMap<String, crate::calendar::Calendar>> {
+    pub fn calendars(&self) -> crate::Result<HashMap<String, crate::Calendar>> {
         match self.home() {
             Ok(home) => home[0].calendars(),
             Err(err) => Err(err),

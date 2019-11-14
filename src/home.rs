@@ -34,7 +34,7 @@ impl crate::Children for Home {
 }
 
 impl Home {
-    pub fn calendars(&self) -> crate::result::Result<HashMap<String, crate::calendar::Calendar>> {
+    pub fn calendars(&self) -> crate::Result<HashMap<String, crate::Calendar>> {
         let response = self.propfind(self.url.clone(), r#"
 <d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop>

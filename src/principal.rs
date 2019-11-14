@@ -34,7 +34,7 @@ impl crate::Children for Principal {
 }
 
 impl Principal {
-    pub fn home(&self) -> crate::result::Result<Vec<crate::home::Home>> {
+    pub fn home(&self) -> crate::Result<Vec<crate::Home>> {
         let response = self.propfind(self.url.clone(), r#"
 <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop>

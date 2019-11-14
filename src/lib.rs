@@ -5,6 +5,10 @@ mod home;
 mod principal;
 mod result;
 
+use calendar::*;
+use event::*;
+use principal::*;
+use home::*;
 pub use client::*;
 pub use result::*;
 
@@ -21,15 +25,15 @@ pub trait Requestable {
     fn get_auth(&self) -> Option<Authorization>;
     fn set_auth(&mut self, auth: Option<Authorization>);
 
-    fn get<S>(&self, href: S) -> result::Result<String> where S: Into<String> {
+    fn get<S>(&self, href: S) -> Result<String> where S: Into<String> {
         self.request("GET", href, None, None)
     }
 
-    fn propfind<S>(&self, href: S, body: &str) -> result::Result<String> where S: Into<String> {
+    fn propfind<S>(&self, href: S, body: &str) -> Result<String> where S: Into<String> {
         self.request("PROPFIND", href, Some(body), None)
     }
 
-    fn report<S>(&self, href: S, body: &str) -> result::Result<String> where S: Into<String> {
+    fn report<S>(&self, href: S, body: &str) -> Result<String> where S: Into<String> {
         let mut headers = reqwest::header::HeaderMap::new();
 
         headers.insert("Depth", reqwest::header::HeaderValue::from_static("1"));
@@ -37,7 +41,7 @@ pub trait Requestable {
         self.request("REPORT", href, Some(body), Some(headers))
     }
 
-    fn request<S>(&self, method: &str, href: S, body: Option<&str>, headers: Option<reqwest::header::HeaderMap>) -> result::Result<String> where S: Into<String>{
+    fn request<S>(&self, method: &str, href: S, body: Option<&str>, headers: Option<reqwest::header::HeaderMap>) -> Result<String> where S: Into<String>{
         let http = reqwest::Client::new();
         let mut request = http.request(reqwest::Method::from_bytes(method.as_bytes()).unwrap(), &href.into());
 
@@ -66,7 +70,7 @@ pub trait Requestable {
                 response.read_to_string(&mut content)?;
                 Ok(content)
             },
-            _ => Err(result::Error::new(format!("{}", response.status()))),
+            _ => Err(Error::new(format!("{}", response.status()))),
         }
     }
 }
