@@ -9,12 +9,12 @@ use std::collections::HashMap;
 use std::io::prelude::*;
 
 #[derive(Clone, Debug, PartialEq)]
-struct Authorization {
-    username: String,
-    password: Option<String>,
+pub struct Authorization {
+    pub username: String,
+    pub password: Option<String>,
 }
 
-trait Requestable {
+pub trait Requestable {
     fn get_auth(&self) -> Option<Authorization>;
     fn set_auth(&mut self, auth: Option<Authorization>);
 
