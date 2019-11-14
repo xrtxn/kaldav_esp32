@@ -3,12 +3,12 @@ use crate::Requestable;
 use std::collections::HashMap;
 use std::convert::Into;
 
-pub struct Caldav {
+pub struct Client {
     url: String,
     auth: Option<crate::Authorization>,
 }
 
-impl crate::Requestable for Caldav {
+impl crate::Requestable for Client {
     fn get_auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
@@ -18,24 +18,24 @@ impl crate::Requestable for Caldav {
     }
 }
 
-impl crate::Xmlable for Caldav {
+impl crate::Xmlable for Client {
     fn get_url(&self) -> String {
         self.url.clone()
     }
 }
 
-impl crate::Children for Caldav {
+impl crate::Children for Client {
     fn new<S>(url: S) -> Self where S: Into<String> {
-        Caldav {
+        Self {
             url: url.into(),
             auth: None,
         }
     }
 }
 
-impl Caldav {
+impl Client {
     pub fn new<S>(url: S) -> Self where S: Into<String> {
-        Caldav {
+        Self {
             url: url.into(),
             auth: None,
         }

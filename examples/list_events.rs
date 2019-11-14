@@ -14,7 +14,7 @@ fn main() -> caldav::result::Result<()>
 {
     let opt = Opt::from_args();
 
-    let mut client = caldav::caldav::Caldav::new(opt.url);
+    let mut client = caldav::client::Client::new(opt.url);
 
     if let Some(username) = opt.username {
         client.set_auth(Some(caldav::Authorization {
