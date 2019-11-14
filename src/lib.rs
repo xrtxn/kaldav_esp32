@@ -9,11 +9,12 @@ use calendar::*;
 use event::*;
 use principal::*;
 use home::*;
+
 pub use client::*;
 pub use result::*;
 
 use std::collections::HashMap;
-use std::io::prelude::*;
+use std::io::Read;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Authorization {
