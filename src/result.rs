@@ -15,6 +15,15 @@ impl Error {
     }
 }
 
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for Error {
+}
+
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
         Error {
