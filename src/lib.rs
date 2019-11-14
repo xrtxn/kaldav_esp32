@@ -16,7 +16,7 @@ pub use result::*;
 use std::collections::HashMap;
 use std::io::Read;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Authorization {
     pub username: String,
     pub password: Option<String>,

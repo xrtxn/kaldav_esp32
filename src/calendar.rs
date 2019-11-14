@@ -1,7 +1,7 @@
 use crate::Children;
 use crate::Requestable;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Calendar {
     url: String,
     auth: Option<crate::Authorization>,

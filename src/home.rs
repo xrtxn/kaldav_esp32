@@ -2,7 +2,7 @@ use crate::Children;
 use crate::Requestable;
 use std::collections::HashMap;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Home {
     url: String,
     auth: Option<crate::Authorization>,

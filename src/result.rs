@@ -2,7 +2,7 @@ use std::convert::{ Into, From };
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Error {
     message: String,
 }

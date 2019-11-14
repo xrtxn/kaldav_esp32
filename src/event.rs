@@ -3,7 +3,7 @@ use std::convert::TryInto;
 
 pub type Todo = Event;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Event {
     pub url: String,
     auth: Option<crate::Authorization>,
