@@ -13,3 +13,6 @@ url = "2.0"
 [dependencies.ical-parser]
 version = "0.1"
 path = "../ical-parser"
+
+[dev-dependencies]
+structopt = "0.3"
