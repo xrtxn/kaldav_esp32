@@ -25,7 +25,10 @@ impl crate::Xmlable for Principal {
 }
 
 impl crate::Children for Principal {
-    fn new<S>(url: S) -> Self where S: Into<String> {
+    fn new<S>(url: S) -> Self
+    where
+        S: Into<String>,
+    {
         Principal {
             url: url.into(),
             auth: None,
@@ -35,17 +38,22 @@ impl crate::Children for Principal {
 
 impl Principal {
     pub fn home(&self) -> crate::Result<Vec<crate::Home>> {
-        let response = self.propfind(self.url.clone(), r#"
+        let response = self.propfind(
+            self.url.clone(),
+            r#"
 <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop>
      <d:displayname />
      <c:calendar-home-set />
   </d:prop>
 </d:propfind>
-"#);
+"#,
+        );
 
         match response {
-            Ok(response) => Ok(self.to_vec(response.as_str(), "//cal:calendar-home-set/d:href/text()")),
+            Ok(response) => {
+                Ok(self.to_vec(response.as_str(), "//cal:calendar-home-set/d:href/text()"))
+            }
             Err(err) => Err(err),
         }
     }

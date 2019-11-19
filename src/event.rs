@@ -26,7 +26,10 @@ impl crate::Xmlable for Event {
 }
 
 impl crate::Children for Event {
-    fn new<S>(url: S) -> Self where S: Into<String> {
+    fn new<S>(url: S) -> Self
+    where
+        S: Into<String>,
+    {
         Event {
             url: url.into(),
             auth: None,

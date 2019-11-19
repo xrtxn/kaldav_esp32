@@ -1,4 +1,4 @@
-use std::convert::{ Into, From };
+use std::convert::{From, Into};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -8,7 +8,10 @@ pub struct Error {
 }
 
 impl Error {
-    pub fn new<S>(message: S) -> Self where S: Into<String> {
+    pub fn new<S>(message: S) -> Self
+    where
+        S: Into<String>,
+    {
         Error {
             message: message.into(),
         }
@@ -21,8 +24,7 @@ impl std::fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error {
-}
+impl std::error::Error for Error {}
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {

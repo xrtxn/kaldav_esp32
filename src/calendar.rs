@@ -24,7 +24,10 @@ impl crate::Xmlable for Calendar {
 }
 
 impl crate::Children for Calendar {
-    fn new<S>(url: S) -> Self where S: Into<String> {
+    fn new<S>(url: S) -> Self
+    where
+        S: Into<String>,
+    {
         Calendar {
             url: url.into(),
             auth: None,
@@ -52,7 +55,8 @@ impl Calendar {
     }
 
     fn request(&self, filter: &str) -> crate::Result<String> {
-        let body = format!(r#"
+        let body = format!(
+            r#"
 <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
     <d:prop>
         <d:resourcetype />
@@ -63,7 +67,9 @@ impl Calendar {
         </c:comp-filter>
     </c:filter>
 </c:calendar-query>
-"#, filter);
+"#,
+            filter
+        );
 
         self.report(self.url.clone(), body.as_str())
     }

@@ -25,7 +25,10 @@ impl crate::Xmlable for Home {
 }
 
 impl crate::Children for Home {
-    fn new<S>(url: S) -> Self where S: Into<String> {
+    fn new<S>(url: S) -> Self
+    where
+        S: Into<String>,
+    {
         Home {
             url: url.into(),
             auth: None,
@@ -47,7 +50,11 @@ impl Home {
 "#);
 
         match response {
-            Ok(response) => Ok(self.to_map(response.as_str(), "//d:response//d:displayname/text()", "//d:displayname [text() = '{}']/../../../d:href/text()")),
+            Ok(response) => Ok(self.to_map(
+                response.as_str(),
+                "//d:response//d:displayname/text()",
+                "//d:displayname [text() = '{}']/../../../d:href/text()",
+            )),
             Err(err) => Err(err),
         }
     }

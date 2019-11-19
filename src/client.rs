@@ -25,7 +25,10 @@ impl crate::Xmlable for Client {
 }
 
 impl crate::Children for Client {
-    fn new<S>(url: S) -> Self where S: Into<String> {
+    fn new<S>(url: S) -> Self
+    where
+        S: Into<String>,
+    {
         Self {
             url: url.into(),
             auth: None,
@@ -34,7 +37,10 @@ impl crate::Children for Client {
 }
 
 impl Client {
-    pub fn new<S>(url: S) -> Self where S: Into<String> {
+    pub fn new<S>(url: S) -> Self
+    where
+        S: Into<String>,
+    {
         Self {
             url: url.into(),
             auth: None,
@@ -42,16 +48,22 @@ impl Client {
     }
 
     pub fn principals(&self) -> crate::Result<Vec<crate::Principal>> {
-        let response = self.propfind(self.url.clone(), r#"
+        let response = self.propfind(
+            self.url.clone(),
+            r#"
 <d:propfind xmlns:d="DAV:">
     <d:prop>
         <d:current-user-principal />
     </d:prop>
 </d:propfind>
-"#);
+"#,
+        );
 
         match response {
-            Ok(response) => Ok(self.to_vec(response.as_str(), "//d:current-user-principal/d:href/text()")),
+            Ok(response) => Ok(self.to_vec(
+                response.as_str(),
+                "//d:current-user-principal/d:href/text()",
+            )),
             Err(err) => Err(err),
         }
     }
