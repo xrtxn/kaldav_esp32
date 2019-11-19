@@ -37,21 +37,15 @@ impl crate::Children for Calendar {
 
 impl Calendar {
     pub fn events(&self) -> crate::Result<Vec<crate::Event>> {
-        let response = self.request("VEVENT");
+        let response = self.request("VEVENT")?;
 
-        match response {
-            Ok(response) => Ok(self.to_vec(response.as_str(), "//d:response/d:href/text()")),
-            Err(err) => Err(err),
-        }
+        Ok(self.to_vec(&response, "//d:response/d:href/text()"))
     }
 
     pub fn tasks(&self) -> crate::Result<Vec<crate::Todo>> {
-        let response = self.request("VTODO");
+        let response = self.request("VTODO")?;
 
-        match response {
-            Ok(response) => Ok(self.to_vec(response.as_str(), "//d:response/d:href/text()")),
-            Err(err) => Err(err),
-        }
+        Ok(self.to_vec(&response, "//d:response/d:href/text()"))
     }
 
     fn request(&self, filter: &str) -> crate::Result<String> {
@@ -71,6 +65,6 @@ impl Calendar {
             filter
         );
 
-        self.report(self.url.clone(), body.as_str())
+        self.report(&self.url, &body)
     }
 }

@@ -39,7 +39,7 @@ impl crate::Children for Principal {
 impl Principal {
     pub fn home(&self) -> crate::Result<Vec<crate::Home>> {
         let response = self.propfind(
-            self.url.clone(),
+            &self.url,
             r#"
 <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop>
@@ -48,13 +48,8 @@ impl Principal {
   </d:prop>
 </d:propfind>
 "#,
-        );
+        )?;
 
-        match response {
-            Ok(response) => {
-                Ok(self.to_vec(response.as_str(), "//cal:calendar-home-set/d:href/text()"))
-            }
-            Err(err) => Err(err),
-        }
+        Ok(self.to_vec(&response, "//cal:calendar-home-set/d:href/text()"))
     }
 }

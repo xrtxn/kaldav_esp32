@@ -49,7 +49,7 @@ impl Client {
 
     pub fn principals(&self) -> crate::Result<Vec<crate::Principal>> {
         let response = self.propfind(
-            self.url.clone(),
+            &self.url,
             r#"
 <d:propfind xmlns:d="DAV:">
     <d:prop>
@@ -57,35 +57,24 @@ impl Client {
     </d:prop>
 </d:propfind>
 "#,
-        );
+        )?;
 
-        match response {
-            Ok(response) => Ok(self.to_vec(
-                response.as_str(),
-                "//d:current-user-principal/d:href/text()",
-            )),
-            Err(err) => Err(err),
-        }
+        Ok(self.to_vec(&response, "//d:current-user-principal/d:href/text()"))
     }
 
     fn principal(&self) -> crate::Result<crate::Principal> {
-        match self.principals() {
-            Ok(p) => Ok(p[0].clone()),
-            Err(err) => Err(err),
-        }
+        let principals = self.principals()?;
+
+        Ok(principals[0].clone())
     }
 
     fn home(&self) -> crate::Result<Vec<crate::Home>> {
-        match self.principal() {
-            Ok(principal) => principal.home(),
-            Err(err) => Err(err),
-        }
+        self.principal()?.home()
     }
 
     pub fn calendars(&self) -> crate::Result<HashMap<String, crate::Calendar>> {
-        match self.home() {
-            Ok(home) => home[0].calendars(),
-            Err(err) => Err(err),
-        }
+        let home = self.home()?;
+
+        home[0].calendars()
     }
 }
