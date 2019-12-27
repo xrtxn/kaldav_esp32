@@ -74,7 +74,7 @@ pub trait Requestable {
             None => reqwest::header::HeaderMap::new(),
         };
 
-        if let Some(auth) = self.get_auth().clone() {
+        if let Some(auth) = self.get_auth() {
             request = request.basic_auth(auth.username, auth.password);
         }
 
