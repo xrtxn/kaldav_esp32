@@ -163,16 +163,14 @@ trait Children: Requestable + Xmlable {
         let mut map = HashMap::new();
         let keys = Self::get_xml(response, key_xpath);
 
-        for x in 1..keys.len() {
-            let key = keys[x].clone();
-
+        for key in keys.iter().skip(1) {
             let xpath = value_xpath.replace("{}", key.as_str());
             let values = Self::get_xml(response, xpath.as_str());
 
             let mut element = C::new(self.append_host(values[0].clone()));
             element.set_auth(self.get_auth());
 
-            map.insert(key, element);
+            map.insert(key.to_string(), element);
         }
 
         map
