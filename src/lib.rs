@@ -14,7 +14,6 @@ pub use client::*;
 pub use result::*;
 
 use std::collections::HashMap;
-use std::io::Read;
 
 #[derive(Clone, Debug)]
 pub struct Authorization {
@@ -44,9 +43,9 @@ pub trait Requestable {
     where
         S: Into<String>,
     {
-        let mut headers = reqwest::header::HeaderMap::new();
+        let mut headers = HashMap::new();
 
-        headers.insert("Depth", reqwest::header::HeaderValue::from_static("1"));
+        headers.insert("Depth", "1");
 
         self.request("REPORT", href, Some(body), Some(headers))
     }
@@ -56,42 +55,34 @@ pub trait Requestable {
         method: &str,
         href: S,
         body: Option<&str>,
-        headers: Option<reqwest::header::HeaderMap>,
+        headers: Option<HashMap<&'static str, &'static str>>,
     ) -> Result<String>
     where
         S: Into<String>,
     {
-        let http = reqwest::Client::new();
-        let mut request = http.request(
-            reqwest::Method::from_bytes(method.as_bytes()).unwrap(),
+        let mut request = attohttpc::RequestBuilder::new(
+            attohttpc::Method::from_bytes(method.as_bytes()).unwrap(),
             &href.into(),
-        );
+        )
+        .text(body.unwrap_or_default());
 
-        let mut content = String::new();
-
-        let headers = match headers {
-            Some(headers) => headers,
-            None => reqwest::header::HeaderMap::new(),
-        };
+        if let Some(headers) = headers {
+            for (key, value) in &headers {
+                request = request.header(*key, *value);
+            }
+        }
 
         if let Some(auth) = self.get_auth() {
             request = request.basic_auth(auth.username, auth.password);
         }
 
-        request = request.headers(headers);
+        let response = request.send()?;
 
-        if let Some(body) = body {
-            request = request.body(body.to_string());
+        if response.is_success() {
+            Ok(response.text()?)
         }
-
-        let mut response = request.send()?;
-
-        match response.status() {
-            reqwest::StatusCode::MULTI_STATUS | reqwest::StatusCode::OK => {
-                response.read_to_string(&mut content)?;
-                Ok(content)
-            }
-            _ => Err(Error::new(format!("{}", response.status()))),
+        else {
+            Err(Error::new(format!("{}", response.status())))
         }
     }
 }

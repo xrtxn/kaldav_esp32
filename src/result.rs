@@ -26,8 +26,8 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Error {
+impl From<attohttpc::Error> for Error {
+    fn from(err: attohttpc::Error) -> Error {
         Error {
             message: format!("{}", err),
         }
