@@ -1,10 +1,17 @@
-use std::convert::{From, Into};
+use std::convert::Into;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
-pub struct Error {
-    message: String,
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("{0}")]
+    Misc(String),
+    #[error("Parser error: {0}")]
+    Parser(#[from] ical::parser::ParserError),
+    #[error("HTTP error: {0}")]
+    Http(#[from] attohttpc::Error),
 }
 
 impl Error {
@@ -12,32 +19,6 @@ impl Error {
     where
         S: Into<String>,
     {
-        Error {
-            message: message.into(),
-        }
-    }
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for Error {}
-
-impl From<attohttpc::Error> for Error {
-    fn from(err: attohttpc::Error) -> Error {
-        Error {
-            message: format!("{}", err),
-        }
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error {
-            message: format!("{}", err),
-        }
+        Self::Misc(message.into())
     }
 }

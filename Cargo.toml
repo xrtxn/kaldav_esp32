@@ -8,6 +8,7 @@ edition = "2018"
 attohttpc = "0.16"
 sxd-document = "0.3"
 sxd-xpath = "0.4"
+thiserror = "1.0"
 url = "2.0"
 
 [dependencies.ical-parser]
