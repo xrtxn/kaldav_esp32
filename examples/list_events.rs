@@ -25,22 +25,30 @@ fn main() -> caldav::Result<()> {
     let calendars = client.calendars()?;
 
     for (name, calendar) in calendars {
-        println!("Using calendar '{}'", name);
+        println!("Calendar '{}'", name);
 
-        let events = calendar.events()?;
+        let calendars = calendar.events()?;
 
-        if events.len() == 0 {
+        if calendars.len() == 0 {
             println!("  no events");
             continue;
         }
 
-        for event in &events[0..5] {
-            let attr = match event.attr() {
+        for calendar in &calendars[0..5] {
+            let attr = match calendar.attr() {
                 Ok(attr) => attr,
                 Err(_) => continue,
             };
 
-            println!("  {:?}", attr);
+            if let Some(event) = attr.events.get(0) {
+                if let Some(property) = event.properties.iter().filter(|x| x.name == "DTSTART").next() {
+                    print!("  {} - ", property.value.clone().unwrap_or_default());
+                }
+
+                if let Some(property) = event.properties.iter().filter(|x| x.name == "SUMMARY").next() {
+                    println!("{}", property.value.clone().unwrap_or_default());
+                }
+            }
         }
     }
 

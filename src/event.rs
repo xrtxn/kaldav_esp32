@@ -1,5 +1,4 @@
 use crate::Requestable;
-use std::convert::TryInto;
 
 pub type Todo = Event;
 
@@ -38,15 +37,15 @@ impl crate::Children for Event {
 }
 
 impl Event {
-    pub fn attr(&self) -> Result<ical_parser::Content, String> {
-        let calendar: Result<ical_parser::VCalendar, String> = match self.get(self.url.clone()) {
-            Ok(calendar) => calendar.try_into(),
-            Err(err) => Err(format!("{:?}", err)),
-        };
+    pub fn attr(&self) -> crate::Result<ical::parser::ical::component::IcalCalendar> {
+        match self.get(self.url.clone()) {
+            Ok(calendar) => {
+                let mut parser = ical::IcalParser::new(calendar.as_bytes());
+                let event = parser.next().unwrap()?;
 
-        match calendar {
-            Ok(calendar) => Ok(calendar.content),
-            Err(err) => Err(err),
+                Ok(event)
+            },
+            Err(err) => Err(crate::Error::Misc(format!("{:?}", err))),
         }
     }
 }
