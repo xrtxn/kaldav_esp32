@@ -41,11 +41,21 @@ fn main() -> caldav::Result<()> {
             };
 
             if let Some(event) = attr.events.get(0) {
-                if let Some(property) = event.properties.iter().filter(|x| x.name == "DTSTART").next() {
+                if let Some(property) = event
+                    .properties
+                    .iter()
+                    .filter(|x| x.name == "DTSTART")
+                    .next()
+                {
                     print!("  {} - ", property.value.clone().unwrap_or_default());
                 }
 
-                if let Some(property) = event.properties.iter().filter(|x| x.name == "SUMMARY").next() {
+                if let Some(property) = event
+                    .properties
+                    .iter()
+                    .filter(|x| x.name == "SUMMARY")
+                    .next()
+                {
                     println!("{}", property.value.clone().unwrap_or_default());
                 }
             }

@@ -44,7 +44,7 @@ impl Event {
                 let event = parser.next().unwrap()?;
 
                 Ok(event)
-            },
+            }
             Err(err) => Err(crate::Error::Misc(format!("{:?}", err))),
         }
     }

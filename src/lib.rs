@@ -80,8 +80,7 @@ pub trait Requestable {
 
         if response.is_success() {
             Ok(response.text()?)
-        }
-        else {
+        } else {
             Err(Error::new(format!("{}", response.status())))
         }
     }
