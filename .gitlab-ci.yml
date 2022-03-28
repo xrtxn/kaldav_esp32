@@ -1,0 +1,27 @@
+image: "rust:latest"
+
+stages:
+    - lint
+    - test
+
+lint:fmt:
+    stage: lint
+    before_script:
+        - rustup component add rustfmt
+    script:
+        - cargo fmt --all -- --check
+
+lint:clippy:
+    stage: lint
+    before_script:
+        - rustup component add clippy
+    script: cargo clippy -- --deny warnings
+    allow_failure: true
+
+test:debug:
+    stage: test
+    script: cargo test
+
+test:release:
+    stage: test
+    script: cargo test --release
