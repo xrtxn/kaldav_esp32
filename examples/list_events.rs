@@ -10,7 +10,7 @@ struct Opt {
     url: String,
 }
 
-fn main() -> caldav::Result<()> {
+fn main() -> caldav::Result {
     let opt = Opt::from_args();
 
     let mut client = caldav::Client::new(opt.url);
