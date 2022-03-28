@@ -1,17 +1,17 @@
 use caldav::Requestable;
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 struct Opt {
-    #[structopt(long)]
+    #[clap(long)]
     username: Option<String>,
-    #[structopt(long)]
+    #[clap(long)]
     password: Option<String>,
     url: String,
 }
 
 fn main() -> caldav::Result {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
 
     let mut client = caldav::Client::new(opt.url);
 
