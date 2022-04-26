@@ -5,7 +5,7 @@ authors = ["Sanpi <sanpi@homecomputing.fr>"]
 edition = "2021"
 
 [dependencies]
-attohttpc = "0.18"
+attohttpc = "0.19"
 ical = "0.7"
 sxd-document = "0.3"
 sxd-xpath = "0.4"
