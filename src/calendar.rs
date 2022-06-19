@@ -67,4 +67,44 @@ impl Calendar {
 
         self.report(&self.url, &body)
     }
+
+    pub fn search<Tz>(
+        &self,
+        start: Option<chrono::DateTime<Tz>>,
+        end: Option<chrono::DateTime<Tz>>,
+    ) -> crate::Result<Vec<crate::Event>>
+    where
+        Tz: chrono::TimeZone,
+        Tz::Offset: std::fmt::Display,
+    {
+        let date_format = "%Y%m%dT%H%M%S";
+
+        let start = start
+            .map(|x| x.format(date_format).to_string())
+            .unwrap_or_else(|| "-infinity".to_string());
+
+        let end = end
+            .map(|x| x.format(date_format).to_string())
+            .unwrap_or_else(|| "+infinity".to_string());
+
+        let body = format!(
+            r#"
+<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+    <d:prop>
+        <d:resourcetype />
+    </d:prop>
+    <c:filter>
+        <c:comp-filter name="VCALENDAR">
+            <c:comp-filter name="VEVENT">
+                <c:time-range start="{start}" end="{end}"/>
+            </c:comp-filter>
+        </c:comp-filter>
+    </c:filter>
+</c:calendar-query>"#
+        );
+
+        let response = self.report(&self.url, &body)?;
+
+        Ok(self.to_vec(&response, "//d:response/d:href/text()"))
+    }
 }
