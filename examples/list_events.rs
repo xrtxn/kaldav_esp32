@@ -11,6 +11,8 @@ struct Opt {
 }
 
 fn main() -> caldav::Result {
+    env_logger::init();
+
     let opt = Opt::parse();
 
     let mut client = caldav::Client::new(opt.url);
