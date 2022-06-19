@@ -29,21 +29,21 @@ fn main() -> caldav::Result {
     for (name, calendar) in calendars {
         println!("Calendar '{}'", name);
 
-        let calendars = calendar.events()?;
+        let events = calendar.events()?;
 
-        if calendars.len() == 0 {
+        if events.len() == 0 {
             println!("  no events");
             continue;
         }
 
-        for calendar in &calendars[0..5] {
-            let attr = match calendar.attr() {
+        for event in &events[0..5] {
+            let attr = match event.attr() {
                 Ok(attr) => attr,
                 Err(_) => continue,
             };
 
-            if let Some(event) = attr.events.get(0) {
-                if let Some(property) = event
+            if let Some(attr_event) = attr.events.get(0) {
+                if let Some(property) = attr_event
                     .properties
                     .iter()
                     .filter(|x| x.name == "DTSTART")
@@ -52,7 +52,7 @@ fn main() -> caldav::Result {
                     print!("  {} - ", property.value.clone().unwrap_or_default());
                 }
 
-                if let Some(property) = event
+                if let Some(property) = attr_event
                     .properties
                     .iter()
                     .filter(|x| x.name == "SUMMARY")
