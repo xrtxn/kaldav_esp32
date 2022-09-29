@@ -3,9 +3,9 @@ use clap::Parser;
 
 #[derive(Parser)]
 struct Opt {
-    #[clap(long)]
+    #[arg(long)]
     username: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     password: Option<String>,
     url: String,
 }
