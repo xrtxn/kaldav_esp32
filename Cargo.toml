@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4"
-ical = "0.7"
+ical = "0.8"
 sxd-document = "0.3"
 sxd-xpath = "0.4"
 thiserror = "1.0"
