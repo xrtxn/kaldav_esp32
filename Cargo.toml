@@ -17,7 +17,7 @@ default-features = false
 features = ["clock", "std"]
 
 [dependencies.attohttpc]
-version = "0.25"
+version = "0.26"
 features = ["basic-auth"]
 
 [dev-dependencies]
