@@ -78,3 +78,49 @@ impl Client {
         home[0].calendars()
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn principals() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let principals = client.principals()?;
+
+        assert_eq!(principals.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn principal() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let _principal = client.principal()?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn home() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let _home = client.home()?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn calendars() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let calendars = client.calendars()?;
+        assert_eq!(calendars.len(), 2);
+
+        Ok(())
+    }
+}

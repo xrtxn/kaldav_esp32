@@ -108,3 +108,37 @@ impl Calendar {
         Ok(self.to_vec(&response, "//d:response/d:href/text()"))
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn events() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let calendars = client.calendars()?;
+        let calendar = calendars.get("Home calendar").unwrap();
+        let events = calendar.events()?;
+        assert_eq!(events.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn search() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let calendars = client.calendars()?;
+        let calendar = calendars.get("Home calendar").unwrap();
+        let start = chrono::NaiveDate::from_ymd_opt(2023, 10, 28)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+            .and_utc();
+        let events = calendar.search(Some(start), None)?;
+        assert_eq!(events.len(), 1);
+
+        Ok(())
+    }
+}

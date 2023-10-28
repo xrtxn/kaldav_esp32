@@ -49,3 +49,32 @@ impl Event {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn event() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let calendars = client.calendars()?;
+        let calendar = calendars.get("Home calendar").unwrap();
+        let events = calendar.events()?;
+        let _event = events[0].attr()?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn task() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let calendars = client.calendars()?;
+        let calendar = calendars.get("My TODO list").unwrap();
+        let tasks = calendar.tasks()?;
+        let _task = tasks[0].attr()?;
+
+        Ok(())
+    }
+}
