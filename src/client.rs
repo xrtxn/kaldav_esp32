@@ -60,9 +60,9 @@ impl Client {
     }
 
     fn principal(&self) -> crate::Result<crate::Principal> {
-        let principals = self.principals()?;
+        let mut principals = self.principals()?;
 
-        Ok(principals[0].clone())
+        Ok(principals.remove(0))
     }
 
     fn home(&self) -> crate::Result<Vec<crate::Home>> {
