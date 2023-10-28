@@ -120,8 +120,9 @@ trait Xmlable {
 
     fn append_host(&self, href: String) -> String {
         let url = url::Url::parse(self.get_url().as_str()).unwrap();
+        let port = url.port().map(|x| format!(":{x}")).unwrap_or_default();
 
-        format!("{}://{}/{}", url.scheme(), url.host_str().unwrap(), href)
+        format!("{}://{}{port}{href}", url.scheme(), url.host_str().unwrap())
     }
 }
 
