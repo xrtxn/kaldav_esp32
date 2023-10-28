@@ -29,7 +29,7 @@ impl crate::Children for Principal {
     where
         S: Into<String>,
     {
-        Principal {
+        Self {
             url: url.into(),
             auth: None,
         }
