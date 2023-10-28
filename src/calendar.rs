@@ -77,7 +77,7 @@ impl Calendar {
         Tz: chrono::TimeZone,
         Tz::Offset: std::fmt::Display,
     {
-        let date_format = "%Y%m%dT%H%M%S";
+        let date_format = "%Y%m%dT%H%M%SZ";
 
         let start = start
             .map(|x| x.format(date_format).to_string())
