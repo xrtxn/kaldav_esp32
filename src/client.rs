@@ -29,10 +29,7 @@ impl crate::Children for Client {
     where
         S: Into<String>,
     {
-        Self {
-            url: url.into(),
-            auth: None,
-        }
+        Self::new(url)
     }
 }
 
