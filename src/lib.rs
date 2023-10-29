@@ -87,7 +87,7 @@ pub trait Requestable {
 }
 
 trait Xmlable {
-    fn url(&self) -> String;
+    fn url(&self) -> &str;
 
     fn xml(xml: &str, xpath: &str) -> Vec<String> {
         let package = sxd_document::parser::parse(xml).unwrap();
@@ -119,7 +119,7 @@ trait Xmlable {
     }
 
     fn append_host(&self, href: String) -> String {
-        let url = url::Url::parse(self.url().as_str()).unwrap();
+        let url = url::Url::parse(self.url()).unwrap();
         let port = url.port().map(|x| format!(":{x}")).unwrap_or_default();
 
         format!("{}://{}{port}{href}", url.scheme(), url.host_str().unwrap())

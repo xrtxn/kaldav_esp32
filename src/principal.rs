@@ -19,8 +19,8 @@ impl crate::Requestable for Principal {
 }
 
 impl crate::Xmlable for Principal {
-    fn url(&self) -> String {
-        self.url.clone()
+    fn url(&self) -> &str {
+        &self.url
     }
 }
 

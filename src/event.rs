@@ -19,8 +19,8 @@ impl crate::Requestable for Event {
 }
 
 impl crate::Xmlable for Event {
-    fn url(&self) -> String {
-        self.url.clone()
+    fn url(&self) -> &str {
+        &self.url
     }
 }
 

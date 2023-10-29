@@ -19,8 +19,8 @@ impl crate::Requestable for Home {
 }
 
 impl crate::Xmlable for Home {
-    fn url(&self) -> String {
-        self.url.clone()
+    fn url(&self) -> &str {
+        &self.url
     }
 }
 

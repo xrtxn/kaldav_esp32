@@ -19,8 +19,8 @@ impl crate::Requestable for Client {
 }
 
 impl crate::Xmlable for Client {
-    fn url(&self) -> String {
-        self.url.clone()
+    fn url(&self) -> &str {
+        &self.url
     }
 }
 

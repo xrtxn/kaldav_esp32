@@ -18,8 +18,8 @@ impl crate::Requestable for Calendar {
 }
 
 impl crate::Xmlable for Calendar {
-    fn url(&self) -> String {
-        self.url.clone()
+    fn url(&self) -> &str {
+        &self.url
     }
 }
 
