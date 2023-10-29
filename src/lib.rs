@@ -154,7 +154,7 @@ trait Children: Requestable + Xmlable {
         let mut map = HashMap::new();
         let keys = Self::get_xml(response, key_xpath);
 
-        for key in keys.iter().skip(1) {
+        for key in keys {
             let xpath = value_xpath.replace("{}", key.as_str());
             let values = Self::get_xml(response, xpath.as_str());
 
