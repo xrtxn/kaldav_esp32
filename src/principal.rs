@@ -9,7 +9,7 @@ pub struct Principal {
 }
 
 impl crate::Requestable for Principal {
-    fn get_auth(&self) -> Option<crate::Authorization> {
+    fn auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
 
@@ -19,7 +19,7 @@ impl crate::Requestable for Principal {
 }
 
 impl crate::Xmlable for Principal {
-    fn get_url(&self) -> String {
+    fn url(&self) -> String {
         self.url.clone()
     }
 }

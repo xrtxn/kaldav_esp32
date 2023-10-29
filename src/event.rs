@@ -9,7 +9,7 @@ pub struct Event {
 }
 
 impl crate::Requestable for Event {
-    fn get_auth(&self) -> Option<crate::Authorization> {
+    fn auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
 
@@ -19,7 +19,7 @@ impl crate::Requestable for Event {
 }
 
 impl crate::Xmlable for Event {
-    fn get_url(&self) -> String {
+    fn url(&self) -> String {
         self.url.clone()
     }
 }

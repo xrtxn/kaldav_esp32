@@ -22,7 +22,7 @@ pub struct Authorization {
 }
 
 pub trait Requestable {
-    fn get_auth(&self) -> Option<Authorization>;
+    fn auth(&self) -> Option<Authorization>;
     fn set_auth(&mut self, auth: Option<Authorization>);
 
     fn get<S>(&self, href: S) -> Result<String>
@@ -72,7 +72,7 @@ pub trait Requestable {
             }
         }
 
-        if let Some(auth) = self.get_auth() {
+        if let Some(auth) = self.auth() {
             request = request.basic_auth(auth.username, auth.password);
         }
 
@@ -87,9 +87,9 @@ pub trait Requestable {
 }
 
 trait Xmlable {
-    fn get_url(&self) -> String;
+    fn url(&self) -> String;
 
-    fn get_xml(xml: &str, xpath: &str) -> Vec<String> {
+    fn xml(xml: &str, xpath: &str) -> Vec<String> {
         let package = sxd_document::parser::parse(xml).unwrap();
         let document = package.as_document();
         let root = document.root().children()[0];
@@ -119,7 +119,7 @@ trait Xmlable {
     }
 
     fn append_host(&self, href: String) -> String {
-        let url = url::Url::parse(self.get_url().as_str()).unwrap();
+        let url = url::Url::parse(self.url().as_str()).unwrap();
         let port = url.port().map(|x| format!(":{x}")).unwrap_or_default();
 
         format!("{}://{}{port}{href}", url.scheme(), url.host_str().unwrap())
@@ -135,12 +135,12 @@ trait Children: Requestable + Xmlable {
     where
         C: Children + Requestable,
     {
-        Self::get_xml(response, xpath)
+        Self::xml(response, xpath)
             .iter()
             .map(|x| {
                 let mut element = C::new(self.append_host(x.clone()));
 
-                element.set_auth(self.get_auth());
+                element.set_auth(self.auth());
 
                 element
             })
@@ -152,14 +152,14 @@ trait Children: Requestable + Xmlable {
         C: Children + Requestable,
     {
         let mut map = HashMap::new();
-        let keys = Self::get_xml(response, key_xpath);
+        let keys = Self::xml(response, key_xpath);
 
         for key in keys {
             let xpath = value_xpath.replace("{}", key.as_str());
-            let values = Self::get_xml(response, xpath.as_str());
+            let values = Self::xml(response, xpath.as_str());
 
             let mut element = C::new(self.append_host(values[0].clone()));
-            element.set_auth(self.get_auth());
+            element.set_auth(self.auth());
 
             map.insert(key.to_string(), element);
         }

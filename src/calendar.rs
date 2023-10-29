@@ -8,7 +8,7 @@ pub struct Calendar {
 }
 
 impl crate::Requestable for Calendar {
-    fn get_auth(&self) -> Option<crate::Authorization> {
+    fn auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
 
@@ -18,7 +18,7 @@ impl crate::Requestable for Calendar {
 }
 
 impl crate::Xmlable for Calendar {
-    fn get_url(&self) -> String {
+    fn url(&self) -> String {
         self.url.clone()
     }
 }

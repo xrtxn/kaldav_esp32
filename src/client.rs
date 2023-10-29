@@ -9,7 +9,7 @@ pub struct Client {
 }
 
 impl crate::Requestable for Client {
-    fn get_auth(&self) -> Option<crate::Authorization> {
+    fn auth(&self) -> Option<crate::Authorization> {
         self.auth.clone()
     }
 
@@ -19,7 +19,7 @@ impl crate::Requestable for Client {
 }
 
 impl crate::Xmlable for Client {
-    fn get_url(&self) -> String {
+    fn url(&self) -> String {
         self.url.clone()
     }
 }
