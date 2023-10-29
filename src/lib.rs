@@ -21,7 +21,7 @@ pub struct Authorization {
     pub password: Option<String>,
 }
 
-pub trait Requestable {
+trait Requestable {
     fn auth(&self) -> Option<Authorization>;
     fn set_auth(&mut self, auth: Option<Authorization>);
 

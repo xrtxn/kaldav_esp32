@@ -1,4 +1,3 @@
-use caldav::Requestable;
 use clap::Parser;
 
 #[derive(Parser)]
