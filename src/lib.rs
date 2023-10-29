@@ -5,12 +5,11 @@ mod home;
 mod principal;
 mod result;
 
-use calendar::*;
-use event::*;
-use home::*;
-use principal::*;
-
 pub use client::*;
+pub use calendar::*;
+pub use event::*;
+pub use home::*;
+pub use principal::*;
 pub use result::*;
 
 use std::collections::HashMap;
