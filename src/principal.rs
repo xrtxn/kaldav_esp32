@@ -2,38 +2,10 @@ use crate::Children;
 use crate::Requestable;
 use std::convert::Into;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, crate::Object)]
 pub struct Principal {
     url: String,
     auth: Option<crate::Authorization>,
-}
-
-impl crate::Requestable for Principal {
-    fn auth(&self) -> Option<crate::Authorization> {
-        self.auth.clone()
-    }
-
-    fn set_auth(&mut self, auth: Option<crate::Authorization>) {
-        self.auth = auth;
-    }
-}
-
-impl crate::Xmlable for Principal {
-    fn url(&self) -> &str {
-        &self.url
-    }
-}
-
-impl crate::Children for Principal {
-    fn new<S>(url: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Self {
-            url: url.into(),
-            auth: None,
-        }
-    }
 }
 
 impl Principal {

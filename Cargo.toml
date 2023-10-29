@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "derive"]
+
 [package]
 name = "caldav"
 version = "0.1.0"
@@ -10,6 +13,10 @@ sxd-document = "0.3"
 sxd-xpath = "0.4"
 thiserror = "1.0"
 url = "2.0"
+
+[dependencies.caldav-derive]
+version = "0.1"
+path = "derive"
 
 [dependencies.chrono]
 version = "0.4"

@@ -12,6 +12,7 @@ pub use home::*;
 pub use principal::*;
 pub use result::*;
 
+use caldav_derive::*;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
