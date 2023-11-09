@@ -13,7 +13,7 @@ pub use principal::*;
 pub use result::*;
 
 use caldav_derive::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
 pub struct Authorization {
@@ -43,7 +43,7 @@ trait Requestable {
     where
         S: Into<String>,
     {
-        let mut headers = HashMap::new();
+        let mut headers = BTreeMap::new();
 
         headers.insert("Depth", "1");
 
@@ -55,7 +55,7 @@ trait Requestable {
         method: &str,
         href: S,
         body: Option<&str>,
-        headers: Option<HashMap<&'static str, &'static str>>,
+        headers: Option<BTreeMap<&'static str, &'static str>>,
     ) -> Result<String>
     where
         S: Into<String>,
@@ -147,11 +147,11 @@ trait Children: Requestable + Xmlable {
             .collect()
     }
 
-    fn to_map<C>(&self, response: &str, key_xpath: &str, value_xpath: &str) -> HashMap<String, C>
+    fn to_map<C>(&self, response: &str, key_xpath: &str, value_xpath: &str) -> BTreeMap<String, C>
     where
         C: Children + Requestable,
     {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         let keys = Self::xml(response, key_xpath);
 
         for key in keys {

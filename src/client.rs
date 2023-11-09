@@ -1,6 +1,6 @@
 use crate::Children;
 use crate::Requestable;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::convert::Into;
 
 #[derive(crate::Object)]
@@ -45,7 +45,7 @@ impl Client {
         self.principal()?.home()
     }
 
-    pub fn calendars(&self) -> crate::Result<HashMap<String, crate::Calendar>> {
+    pub fn calendars(&self) -> crate::Result<BTreeMap<String, crate::Calendar>> {
         let home = self.home()?;
 
         home[0].calendars()

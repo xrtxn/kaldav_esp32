@@ -1,6 +1,6 @@
 use crate::Children;
 use crate::Requestable;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, crate::Object)]
 pub struct Home {
@@ -9,7 +9,7 @@ pub struct Home {
 }
 
 impl Home {
-    pub fn calendars(&self) -> crate::Result<HashMap<String, crate::Calendar>> {
+    pub fn calendars(&self) -> crate::Result<BTreeMap<String, crate::Calendar>> {
         let response = self.propfind(&self.url, r#"
 <d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop>
