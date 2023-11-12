@@ -26,9 +26,10 @@ impl Home {
             &response,
             "//d:response//d:displayname/text()",
             "//d:displayname [text() = '{}']/../../../d:href/text()",
-            vec![
-              ("color", "//d:displayname [text() = '{}']/../x1:calendar-color/text()"),
-            ],
+            vec![(
+                "color",
+                "//d:displayname [text() = '{}']/../x1:calendar-color/text()",
+            )],
         ))
     }
 }

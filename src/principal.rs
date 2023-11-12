@@ -22,7 +22,10 @@ impl Principal {
 "#,
         )?;
 
-        self.one(&response, "//d:response[1]//cal:calendar-home-set/d:href/text()")
-          .ok_or_else(|| crate::Error::Misc("No home found".to_string()))
+        self.one(
+            &response,
+            "//d:response[1]//cal:calendar-home-set/d:href/text()",
+        )
+        .ok_or_else(|| crate::Error::Misc("No home found".to_string()))
     }
 }

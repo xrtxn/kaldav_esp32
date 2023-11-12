@@ -1,14 +1,14 @@
 mod calendar;
 mod client;
-mod object;
 mod home;
+mod object;
 mod principal;
 mod result;
 
-pub use client::*;
 pub use calendar::*;
-pub use object::*;
+pub use client::*;
 pub use home::*;
+pub use object::*;
 pub use principal::*;
 pub use result::*;
 
@@ -84,7 +84,10 @@ pub trait Requestable {
         if response.is_success() {
             Ok(response.text()?)
         } else {
-            Err(Error::new(format!("{method} {href}: {}", response.status())))
+            Err(Error::new(format!(
+                "{method} {href}: {}",
+                response.status()
+            )))
         }
     }
 }
@@ -164,7 +167,13 @@ pub trait Children: Requestable + Xmlable {
             .collect()
     }
 
-    fn to_map<C>(&self, response: &str, key_xpath: &str, value_xpath: &str, params_xpath: Vec<(&str, &str)>) -> BTreeMap<String, C>
+    fn to_map<C>(
+        &self,
+        response: &str,
+        key_xpath: &str,
+        value_xpath: &str,
+        params_xpath: Vec<(&str, &str)>,
+    ) -> BTreeMap<String, C>
     where
         C: Children + Requestable,
     {
@@ -200,16 +209,17 @@ mod test {
         let server = httpmock::MockServer::start();
 
         server.mock(|when, then| {
-            when.path("/")
-                .body(r#"
+            when.path("/").body(
+                r#"
 <d:propfind xmlns:d="DAV:">
     <d:prop>
         <d:current-user-principal />
     </d:prop>
 </d:propfind>
-"#);
-            then.status(207)
-                .body(r#"
+"#,
+            );
+            then.status(207).body(
+                r#"
 <d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
     <d:response>
         <d:href>/</d:href>
@@ -222,22 +232,24 @@ mod test {
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
     </d:response>
-</d:multistatus>"#);
+</d:multistatus>"#,
+            );
         });
 
         server.mock(|when, then| {
-            when.path("/principals/users/johndoe/")
-                .body(r#"
+            when.path("/principals/users/johndoe/").body(
+                r#"
 <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop>
      <d:displayname />
      <c:calendar-home-set />
   </d:prop>
 </d:propfind>
-"#);
+"#,
+            );
 
-            then.status(207)
-                .body(r#"
+            then.status(207).body(
+                r#"
 <d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
     <d:response>
         <d:href>/principals/users/johndoe/</d:href>
@@ -251,7 +263,8 @@ mod test {
         </d:propstat>
     </d:response>
 </d:multistatus>
-"#);
+"#,
+            );
         });
 
         server.mock(|when, then| {
@@ -358,8 +371,8 @@ mod test {
             when.method(httpmock::Method::GET)
                 .path("/calendars/johndoe/home/132456-34365.ics");
 
-            then.status(200)
-                .body("BEGIN:VCALENDAR\r
+            then.status(200).body(
+                "BEGIN:VCALENDAR\r
 VERSION:2.0\r
 CALSCALE:GREGORIAN\r
 BEGIN:VEVENT\r
@@ -370,7 +383,8 @@ DURATION:PT1H\r
 RRULE:FREQ=WEEKLY\r
 END:VEVENT\r
 END:VCALENDAR\r
-");
+",
+            );
         });
 
         server.mock(|when, then| {
@@ -409,8 +423,8 @@ END:VCALENDAR\r
             when.method(httpmock::Method::GET)
                 .path("/calendars/johndoe/tasks/132456762153245.ics");
 
-            then.status(200)
-                .body("BEGIN:VCALENDAR\r
+            then.status(200).body(
+                "BEGIN:VCALENDAR\r
 VERSION:2.0\r
 CALSCALE:GREGORIAN\r
 BEGIN:VTODO\r
@@ -419,7 +433,8 @@ SUMMARY:Do the dishes\r
 DUE:20121028T115600Z\r
 END:VTODO\r
 END:VCALENDAR\r
-");
+",
+            );
         });
 
         server.mock(|when, then| {

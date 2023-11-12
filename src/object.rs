@@ -24,11 +24,9 @@ impl Iterator {
     fn get(&self, index: usize) -> crate::Result<ikal::VCalendar> {
         let object = &self.objects[index];
         let contents = object.get(object.url.clone())?;
-        ikal::VCalendar::try_from(contents)
-            .map_err(crate::Error::from)
+        ikal::VCalendar::try_from(contents).map_err(crate::Error::from)
     }
 }
-
 
 impl std::iter::Iterator for Iterator {
     type Item = ikal::VCalendar;
@@ -50,7 +48,10 @@ pub struct Object {
 }
 
 impl crate::Children for Object {
-    fn new<S>(url: S, _: &std::collections::BTreeMap<String, String>) -> Self where S: Into<String> {
+    fn new<S>(url: S, _: &std::collections::BTreeMap<String, String>) -> Self
+    where
+        S: Into<String>,
+    {
         Self {
             url: url.into(),
             auth: None,

@@ -37,7 +37,11 @@ fn main() -> caldav::Result {
 
         for object in objects.take(5) {
             for event in object.events {
-                println!("  {} - {}", event.dtstart, event.summary.unwrap_or_default());
+                println!(
+                    "  {} - {}",
+                    event.dtstart,
+                    event.summary.unwrap_or_default()
+                );
             }
         }
     }

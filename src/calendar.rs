@@ -12,31 +12,25 @@ impl Calendar {
     pub fn objects(&self) -> crate::Result<crate::object::Iterator> {
         let response = self.request(None)?;
 
-        Ok(
-            crate::object::Iterator::from(
-                self.to_vec(&response, "//d:response/d:href/text()")
-            )
-        )
+        Ok(crate::object::Iterator::from(
+            self.to_vec(&response, "//d:response/d:href/text()"),
+        ))
     }
 
     pub fn events(&self) -> crate::Result<crate::object::Iterator> {
         let response = self.request(Some("VEVENT"))?;
 
-        Ok(
-            crate::object::Iterator::from(
-                self.to_vec(&response, "//d:response/d:href/text()")
-            )
-        )
+        Ok(crate::object::Iterator::from(
+            self.to_vec(&response, "//d:response/d:href/text()"),
+        ))
     }
 
     pub fn tasks(&self) -> crate::Result<crate::object::Iterator> {
         let response = self.request(Some("VTODO"))?;
 
-        Ok(
-            crate::object::Iterator::from(
-                self.to_vec(&response, "//d:response/d:href/text()")
-            )
-        )
+        Ok(crate::object::Iterator::from(
+            self.to_vec(&response, "//d:response/d:href/text()"),
+        ))
     }
 
     fn request(&self, filter: Option<&str>) -> crate::Result<String> {
@@ -100,11 +94,9 @@ impl Calendar {
 
         let response = self.report(&self.url, &body)?;
 
-        Ok(
-            crate::object::Iterator::from(
-                self.to_vec(&response, "//d:response/d:href/text()")
-            )
-        )
+        Ok(crate::object::Iterator::from(
+            self.to_vec(&response, "//d:response/d:href/text()"),
+        ))
     }
 }
 
