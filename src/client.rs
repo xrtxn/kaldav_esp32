@@ -41,14 +41,14 @@ impl Client {
         Ok(principals.remove(0))
     }
 
-    fn home(&self) -> crate::Result<Vec<crate::Home>> {
+    fn home(&self) -> crate::Result<crate::Home> {
         self.principal()?.home()
     }
 
     pub fn calendars(&self) -> crate::Result<BTreeMap<String, crate::Calendar>> {
         let home = self.home()?;
 
-        home[0].calendars()
+        home.calendars()
     }
 
     pub fn set_auth(&mut self, auth: Option<crate::Authorization>) {
