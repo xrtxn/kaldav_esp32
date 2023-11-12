@@ -12,6 +12,8 @@ pub use home::*;
 pub use principal::*;
 pub use result::*;
 
+pub use ikal as ical;
+
 use caldav_derive::*;
 use std::collections::BTreeMap;
 
