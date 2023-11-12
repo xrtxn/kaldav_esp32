@@ -34,9 +34,7 @@ impl std::iter::Iterator for Iterator {
     type Item = ikal::VCalendar;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.objects.get(self.current).is_none() {
-            return None;
-        }
+        self.objects.get(self.current)?;
 
         let component = self.get(self.current).unwrap();
         self.current += 1;
