@@ -14,7 +14,7 @@ pub use result::*;
 
 pub use ikal as ical;
 
-use caldav_derive::*;
+use kaldav_derive::*;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]

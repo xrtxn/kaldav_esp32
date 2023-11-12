@@ -2,7 +2,7 @@
 members = [".", "derive"]
 
 [package]
-name = "caldav"
+name = "kaldav"
 version = "0.1.0"
 authors = ["Sanpi <sanpi@homecomputing.fr>"]
 edition = "2021"
@@ -14,7 +14,7 @@ sxd-xpath = "0.4"
 thiserror = "1.0"
 url = "2.0"
 
-[dependencies.caldav-derive]
+[dependencies.kaldav-derive]
 version = "0.1"
 path = "derive"
 

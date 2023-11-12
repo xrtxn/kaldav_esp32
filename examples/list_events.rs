@@ -9,15 +9,15 @@ struct Opt {
     url: String,
 }
 
-fn main() -> caldav::Result {
+fn main() -> kaldav::Result {
     env_logger::init();
 
     let opt = Opt::parse();
 
-    let mut client = caldav::Client::new(opt.url);
+    let mut client = kaldav::Client::new(opt.url);
 
     if let Some(username) = opt.username {
-        client.set_auth(Some(caldav::Authorization {
+        client.set_auth(Some(kaldav::Authorization {
             username,
             password: opt.password,
         }));
