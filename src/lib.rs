@@ -100,6 +100,7 @@ pub trait Xmlable {
         let mut context = sxd_xpath::Context::new();
         context.set_namespace("d", "DAV:");
         context.set_namespace("cal", "urn:ietf:params:xml:ns:caldav");
+        context.set_namespace("x1", "http://apple.com/ns/ical/");
 
         let factory = sxd_xpath::Factory::new();
 
@@ -130,7 +131,7 @@ pub trait Xmlable {
 }
 
 pub trait Children: Requestable + Xmlable {
-    fn new<S>(url: S) -> Self
+    fn new<S>(url: S, params: &BTreeMap<String, String>) -> Self
     where
         S: Into<String>;
 
@@ -154,7 +155,7 @@ pub trait Children: Requestable + Xmlable {
         Self::xml(response, xpath)
             .iter()
             .map(|x| {
-                let mut element = C::new(self.append_host(x.clone()));
+                let mut element = C::new(self.append_host(x.clone()), &BTreeMap::new());
 
                 element.set_auth(self.auth());
 
@@ -163,7 +164,7 @@ pub trait Children: Requestable + Xmlable {
             .collect()
     }
 
-    fn to_map<C>(&self, response: &str, key_xpath: &str, value_xpath: &str) -> BTreeMap<String, C>
+    fn to_map<C>(&self, response: &str, key_xpath: &str, value_xpath: &str, params_xpath: Vec<(&str, &str)>) -> BTreeMap<String, C>
     where
         C: Children + Requestable,
     {
@@ -174,7 +175,15 @@ pub trait Children: Requestable + Xmlable {
             let xpath = value_xpath.replace("{}", key.as_str());
             let values = Self::xml(response, xpath.as_str());
 
-            let mut element = C::new(self.append_host(values[0].clone()));
+            let mut params = BTreeMap::new();
+            for (param_name, param_xpath) in &params_xpath {
+                let xpath = param_xpath.replace("{}", key.as_str());
+                if let Some(param) = Self::xml(response, &xpath).get(0) {
+                    params.insert(param_name.to_string(), param.clone());
+                }
+            }
+
+            let mut element = C::new(self.append_host(values[0].clone()), &params);
             element.set_auth(self.auth());
 
             map.insert(key.to_string(), element);
@@ -248,12 +257,13 @@ mod test {
         server.mock(|when, then| {
             when.path("/calendars/johndoe/")
                 .body(r#"
-<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
+<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav" xmlns:x1="http://apple.com/ns/ical/">
   <d:prop>
      <d:resourcetype />
      <d:displayname />
      <cs:getctag />
      <c:supported-calendar-component-set />
+     <x1:calendar-color />
   </d:prop>
 </d:propfind>
 "#);
@@ -285,6 +295,7 @@ mod test {
                 <c:supported-calendar-component-set>
                     <c:comp name="VEVENT" />
                 </c:supported-calendar-component-set>
+                <x1:calendar-color xmlns:x1="http://apple.com/ns/ical/">#ffd4a5</x1:calendar-color>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -302,6 +313,7 @@ mod test {
                 <c:supported-calendar-component-set>
                     <c:comp name="VTODO" />
                 </c:supported-calendar-component-set>
+                <x1:calendar-color xmlns:x1="http://apple.com/ns/ical/">#ad0083</x1:calendar-color>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>

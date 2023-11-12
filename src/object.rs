@@ -52,7 +52,7 @@ pub struct Object {
 }
 
 impl crate::Children for Object {
-    fn new<S>(url: S) -> Self where S: Into<String> {
+    fn new<S>(url: S, _: &std::collections::BTreeMap<String, String>) -> Self where S: Into<String> {
         Self {
             url: url.into(),
             auth: None,

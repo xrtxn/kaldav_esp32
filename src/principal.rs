@@ -2,7 +2,7 @@ use crate::Children;
 use crate::Requestable;
 use std::convert::Into;
 
-#[derive(Clone, Debug, crate::Object)]
+#[derive(Clone, Debug, Default, crate::Object)]
 pub struct Principal {
     url: String,
     auth: Option<crate::Authorization>,

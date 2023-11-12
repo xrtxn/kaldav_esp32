@@ -1,8 +1,9 @@
 use crate::Children;
 use crate::Requestable;
 
-#[derive(Clone, Debug, crate::Object)]
+#[derive(Clone, Debug, Default, crate::Object)]
 pub struct Calendar {
+    pub color: Option<String>,
     url: String,
     auth: Option<crate::Authorization>,
 }
@@ -109,6 +110,18 @@ impl Calendar {
 
 #[cfg(test)]
 mod test {
+    #[test]
+    fn calendar() -> crate::Result {
+        let server = crate::test::server();
+
+        let client = crate::Client::new(server.url(""));
+        let calendars = client.calendars()?;
+        let calendar = calendars.get("Home calendar").unwrap();
+        assert_eq!(calendar.color.as_deref(), Some("#ffd4a5"));
+
+        Ok(())
+    }
+
     #[test]
     fn events() -> crate::Result {
         let server = crate::test::server();

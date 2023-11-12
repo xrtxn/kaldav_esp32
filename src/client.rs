@@ -3,7 +3,7 @@ use crate::Requestable;
 use std::collections::BTreeMap;
 use std::convert::Into;
 
-#[derive(crate::Object)]
+#[derive(Debug, Default, crate::Object)]
 pub struct Client {
     url: String,
     auth: Option<crate::Authorization>,
