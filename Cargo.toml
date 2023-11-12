@@ -6,6 +6,8 @@ name = "kaldav"
 version = "0.1.0"
 authors = ["Sanpi <sanpi@homecomputing.fr>"]
 edition = "2021"
+description = "Caldav client"
+license = "MIT"
 
 [dependencies]
 ikal = "0.1"
