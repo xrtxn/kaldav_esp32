@@ -8,7 +8,7 @@ authors = ["Sanpi <sanpi@homecomputing.fr>"]
 edition = "2021"
 
 [dependencies]
-ical = "0.8"
+ikal = "0.1"
 sxd-document = "0.3"
 sxd-xpath = "0.4"
 thiserror = "1.0"

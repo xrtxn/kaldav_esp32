@@ -9,7 +9,7 @@ pub enum Error {
     #[error("{0}")]
     Misc(String),
     #[error("Parser error: {0}")]
-    Parser(#[from] ical::parser::ParserError),
+    Parser(#[from] ikal::Error),
     #[error("HTTP error: {0}")]
     Http(#[from] attohttpc::Error),
 }
