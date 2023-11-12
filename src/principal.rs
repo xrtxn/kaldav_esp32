@@ -9,7 +9,7 @@ pub struct Principal {
 }
 
 impl Principal {
-    pub fn home(&self) -> crate::Result<Vec<crate::Home>> {
+    pub fn home(&self) -> crate::Result<crate::Home> {
         let response = self.propfind(
             &self.url,
             r#"

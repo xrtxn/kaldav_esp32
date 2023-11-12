@@ -1,13 +1,13 @@
 mod calendar;
 mod client;
-mod event;
+mod object;
 mod home;
 mod principal;
 mod result;
 
 pub use client::*;
 pub use calendar::*;
-pub use event::*;
+pub use object::*;
 pub use home::*;
 pub use principal::*;
 pub use result::*;
@@ -21,7 +21,7 @@ pub struct Authorization {
     pub password: Option<String>,
 }
 
-trait Requestable {
+pub trait Requestable {
     fn auth(&self) -> Option<Authorization>;
     fn set_auth(&mut self, auth: Option<Authorization>);
 
@@ -60,9 +60,10 @@ trait Requestable {
     where
         S: Into<String>,
     {
+        let href = href.into();
         let mut request = attohttpc::RequestBuilder::new(
             attohttpc::Method::from_bytes(method.as_bytes()).unwrap(),
-            &href.into(),
+            &href,
         )
         .text(body.unwrap_or_default());
 
@@ -81,12 +82,12 @@ trait Requestable {
         if response.is_success() {
             Ok(response.text()?)
         } else {
-            Err(Error::new(format!("{}", response.status())))
+            Err(Error::new(format!("{method} {href}: {}", response.status())))
         }
     }
 }
 
-trait Xmlable {
+pub trait Xmlable {
     fn url(&self) -> &str;
 
     fn xml(xml: &str, xpath: &str) -> Vec<String> {
@@ -126,10 +127,23 @@ trait Xmlable {
     }
 }
 
-trait Children: Requestable + Xmlable {
+pub trait Children: Requestable + Xmlable {
     fn new<S>(url: S) -> Self
     where
         S: Into<String>;
+
+    fn one<C>(&self, response: &str, xpath: &str) -> Option<C>
+    where
+        C: Children + Requestable,
+    {
+        let mut items = self.to_vec(response, xpath);
+
+        if items.is_empty() {
+            None
+        } else {
+            Some(items.remove(0))
+        }
+    }
 
     fn to_vec<C>(&self, response: &str, xpath: &str) -> Vec<C>
     where
@@ -331,19 +345,18 @@ mod test {
                 .path("/calendars/johndoe/home/132456-34365.ics");
 
             then.status(200)
-                .body(r#"
-BEGIN:VCALENDAR
-VERSION:2.0
-CALSCALE:GREGORIAN
-BEGIN:VEVENT
-UID:132456-34365
-SUMMARY:Weekly meeting
-DTSTART:20120101T120000
-DURATION:PT1H
-RRULE:FREQ=WEEKLY
-END:VEVENT
-END:VCALENDAR
-"#);
+                .body("BEGIN:VCALENDAR\r
+VERSION:2.0\r
+CALSCALE:GREGORIAN\r
+BEGIN:VEVENT\r
+UID:132456-34365\r
+SUMMARY:Weekly meeting\r
+DTSTART:20120101T120000\r
+DURATION:PT1H\r
+RRULE:FREQ=WEEKLY\r
+END:VEVENT\r
+END:VCALENDAR\r
+");
         });
 
         server.mock(|when, then| {
@@ -383,17 +396,16 @@ END:VCALENDAR
                 .path("/calendars/johndoe/tasks/132456762153245.ics");
 
             then.status(200)
-                .body(r#"
-BEGIN:VCALENDAR
-VERSION:2.0
-CALSCALE:GREGORIAN
-BEGIN:VTODO
-UID:132456762153245
-SUMMARY:Do the dishes
-DUE:20121028T115600Z
-END:VTODO
-END:VCALENDAR
-"#);
+                .body("BEGIN:VCALENDAR\r
+VERSION:2.0\r
+CALSCALE:GREGORIAN\r
+BEGIN:VTODO\r
+UID:132456762153245\r
+SUMMARY:Do the dishes\r
+DUE:20121028T115600Z\r
+END:VTODO\r
+END:VCALENDAR\r
+");
         });
 
         server.mock(|when, then| {

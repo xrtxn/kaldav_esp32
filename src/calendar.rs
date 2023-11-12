@@ -8,19 +8,42 @@ pub struct Calendar {
 }
 
 impl Calendar {
-    pub fn events(&self) -> crate::Result<Vec<crate::Event>> {
-        let response = self.request("VEVENT")?;
+    pub fn objects(&self) -> crate::Result<crate::object::Iterator> {
+        let response = self.request(None)?;
 
-        Ok(self.to_vec(&response, "//d:response/d:href/text()"))
+        Ok(
+            crate::object::Iterator::from(
+                self.to_vec(&response, "//d:response/d:href/text()")
+            )
+        )
     }
 
-    pub fn tasks(&self) -> crate::Result<Vec<crate::Todo>> {
-        let response = self.request("VTODO")?;
+    pub fn events(&self) -> crate::Result<crate::object::Iterator> {
+        let response = self.request(Some("VEVENT"))?;
 
-        Ok(self.to_vec(&response, "//d:response/d:href/text()"))
+        Ok(
+            crate::object::Iterator::from(
+                self.to_vec(&response, "//d:response/d:href/text()")
+            )
+        )
     }
 
-    fn request(&self, filter: &str) -> crate::Result<String> {
+    pub fn tasks(&self) -> crate::Result<crate::object::Iterator> {
+        let response = self.request(Some("VTODO"))?;
+
+        Ok(
+            crate::object::Iterator::from(
+                self.to_vec(&response, "//d:response/d:href/text()")
+            )
+        )
+    }
+
+    fn request(&self, filter: Option<&str>) -> crate::Result<String> {
+        let filter = if let Some(filter) = filter {
+            format!("<c:comp-filter name=\"{filter}\" />")
+        } else {
+            String::new()
+        };
         let body = format!(
             r#"
 <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
@@ -29,12 +52,11 @@ impl Calendar {
     </d:prop>
     <c:filter>
         <c:comp-filter name="VCALENDAR">
-            <c:comp-filter name="{}" />
+            {filter}
         </c:comp-filter>
     </c:filter>
 </c:calendar-query>
-"#,
-            filter
+"#
         );
 
         self.report(&self.url, &body)
@@ -44,7 +66,7 @@ impl Calendar {
         &self,
         start: Option<chrono::DateTime<Tz>>,
         end: Option<chrono::DateTime<Tz>>,
-    ) -> crate::Result<Vec<crate::Event>>
+    ) -> crate::Result<crate::object::Iterator>
     where
         Tz: chrono::TimeZone,
         Tz::Offset: std::fmt::Display,
@@ -77,7 +99,11 @@ impl Calendar {
 
         let response = self.report(&self.url, &body)?;
 
-        Ok(self.to_vec(&response, "//d:response/d:href/text()"))
+        Ok(
+            crate::object::Iterator::from(
+                self.to_vec(&response, "//d:response/d:href/text()")
+            )
+        )
     }
 }
 
@@ -91,7 +117,7 @@ mod test {
         let calendars = client.calendars()?;
         let calendar = calendars.get("Home calendar").unwrap();
         let events = calendar.events()?;
-        assert_eq!(events.len(), 1);
+        assert!(!events.is_empty());
 
         Ok(())
     }

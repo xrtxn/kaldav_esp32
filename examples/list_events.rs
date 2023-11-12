@@ -28,37 +28,16 @@ fn main() -> caldav::Result {
     for (name, calendar) in calendars {
         println!("Calendar '{}'", name);
 
-        let events = calendar.events()?;
+        let objects = calendar.events()?;
 
-        if events.len() == 0 {
+        if objects.is_empty() {
             println!("  no events");
             continue;
         }
 
-        for event in &events[0..5] {
-            let attr = match event.attr() {
-                Ok(attr) => attr,
-                Err(_) => continue,
-            };
-
-            if let Some(attr_event) = attr.events.get(0) {
-                if let Some(property) = attr_event
-                    .properties
-                    .iter()
-                    .filter(|x| x.name == "DTSTART")
-                    .next()
-                {
-                    print!("  {} - ", property.value.clone().unwrap_or_default());
-                }
-
-                if let Some(property) = attr_event
-                    .properties
-                    .iter()
-                    .filter(|x| x.name == "SUMMARY")
-                    .next()
-                {
-                    println!("{}", property.value.clone().unwrap_or_default());
-                }
+        for object in objects.take(5) {
+            for event in object.events {
+                println!("  {} - {}", event.dtstart, event.summary.unwrap_or_default());
             }
         }
     }
