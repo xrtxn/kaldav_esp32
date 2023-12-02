@@ -69,11 +69,11 @@ impl Calendar {
         let date_format = "%Y%m%dT%H%M%SZ";
 
         let start = start
-            .map(|x| x.format(date_format).to_string())
+            .map(|x| x.naive_utc().format(date_format).to_string())
             .unwrap_or_else(|| "-infinity".to_string());
 
         let end = end
-            .map(|x| x.format(date_format).to_string())
+            .map(|x| x.naive_utc().format(date_format).to_string())
             .unwrap_or_else(|| "+infinity".to_string());
 
         let body = format!(
