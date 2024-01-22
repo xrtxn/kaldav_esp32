@@ -187,7 +187,7 @@ pub trait Children: Requestable + Xmlable {
             let mut params = BTreeMap::new();
             for (param_name, param_xpath) in &params_xpath {
                 let xpath = param_xpath.replace("{}", key.as_str());
-                if let Some(param) = Self::xml(response, &xpath).get(0) {
+                if let Some(param) = Self::xml(response, &xpath).first() {
                     params.insert(param_name.to_string(), param.clone());
                 }
             }
