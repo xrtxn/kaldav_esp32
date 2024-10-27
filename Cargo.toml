@@ -10,7 +10,7 @@ description = "Caldav client"
 license = "MIT"
 
 [dependencies]
-ikal = "0.2"
+ikal = "0.3"
 sxd-document = "0.3"
 sxd-xpath = "0.4"
 thiserror = "1.0"
