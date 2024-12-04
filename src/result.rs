@@ -1,4 +1,5 @@
 use std::convert::Into;
+use esp_idf_svc::io::EspIOError;
 
 pub type Result<T = ()> = std::result::Result<T, Error>;
 
@@ -11,7 +12,7 @@ pub enum Error {
     #[error("Parser error: {0}")]
     Parser(#[from] ikal::Error),
     #[error("HTTP error: {0}")]
-    Http(#[from] attohttpc::Error),
+    Http(#[from] EspIOError),
 }
 
 impl Error {

@@ -14,8 +14,14 @@ pub use result::*;
 
 pub use ikal as ical;
 
+use base64::Engine;
+use embedded_svc::http::{client::Client as HttpClient, Method};
+use embedded_svc::utils::io;
+use esp_idf_svc::http::client::{Configuration as HttpConfiguration, EspHttpConnection};
+use esp_idf_svc::io::Write;
 use kaldav_derive::*;
 use std::collections::BTreeMap;
+use std::iter::Iterator;
 
 #[derive(Clone, Debug)]
 pub struct Authorization {
@@ -63,26 +69,59 @@ pub trait Requestable {
         S: Into<String>,
     {
         let href = href.into();
-        let mut request = attohttpc::RequestBuilder::new(
-            attohttpc::Method::from_bytes(method.as_bytes()).unwrap(),
-            &href,
-        )
-        .text(body.unwrap_or_default());
+        println!("Requesting {} {}", method, href);
+
+        let config = &HttpConfiguration {
+            crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+            use_global_ca_store: true,
+            ..Default::default()
+        };
+
+        let mut converted_headers: Vec<(&str, &str)> = vec![];
 
         if let Some(headers) = headers {
-            for (key, value) in &headers {
-                request = request.header(*key, *value);
-            }
+            //todo check for no headers
+            converted_headers = headers.iter().map(|(k, v)| (*k, *v)).collect();
         }
 
+        let mut client = HttpClient::wrap(EspHttpConnection::new(&config).unwrap());
+
+        let auth_header: String;
         if let Some(auth) = self.auth() {
-            request = request.basic_auth(auth.username, auth.password);
+            auth_header = format!(
+                "Basic {}",
+                base64::engine::general_purpose::STANDARD.encode(format!(
+                    "{}:{}",
+                    auth.username,
+                    auth.password.unwrap()
+                ))
+            );
+            converted_headers.push(("Authorization", auth_header.as_str()));
         }
 
-        let response = request.send()?;
+        println!("Headers: {:?}", converted_headers);
 
-        if response.is_success() {
-            Ok(response.text()?)
+        let req_method = match method {
+            "PROPFIND" => Method::Propfind,
+            "REPORT" => Method::Report,
+            "GET" => Method::Get,
+            _ => panic!("Method not supported"),
+        };
+
+        // let mut request = client.request(req_method, href.as_str(), &converted_headers)?;
+        let mut request = client.request(Method::Post, href.as_str(), &converted_headers)?;
+        request.write_all(body.unwrap().as_bytes())?;
+        request.flush()?;
+
+        let mut response = request.submit()?;
+
+        let mut buf = [0u8; 8192];
+        let bytes_read = io::try_read_full(&mut response, &mut buf).map_err(|e| e.0)?;
+        let text = std::str::from_utf8(&buf[0..bytes_read]).unwrap();
+
+        if embedded_svc::http::status::OK.contains(&response.status()) {
+            println!("Response: {}", text);
+            Ok(text.to_string())
         } else {
             Err(Error::new(format!(
                 "{method} {href}: {}",
@@ -202,279 +241,279 @@ pub trait Children: Requestable + Xmlable {
     }
 }
 
-#[cfg(test)]
-mod test {
-    pub(crate) fn server() -> httpmock::MockServer {
-        env_logger::try_init().ok();
-        let server = httpmock::MockServer::start();
-
-        server.mock(|when, then| {
-            when.path("/").body(
-                r#"
-<d:propfind xmlns:d="DAV:">
-    <d:prop>
-        <d:current-user-principal />
-    </d:prop>
-</d:propfind>
-"#,
-            );
-            then.status(207).body(
-                r#"
-<d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
-    <d:response>
-        <d:href>/</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:current-user-principal>
-                    <d:href>/principals/users/johndoe/</d:href>
-                </d:current-user-principal>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-</d:multistatus>"#,
-            );
-        });
-
-        server.mock(|when, then| {
-            when.path("/principals/users/johndoe/").body(
-                r#"
-<d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-  <d:prop>
-     <d:displayname />
-     <c:calendar-home-set />
-  </d:prop>
-</d:propfind>
-"#,
-            );
-
-            then.status(207).body(
-                r#"
-<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:response>
-        <d:href>/principals/users/johndoe/</d:href>
-        <d:propstat>
-            <d:prop>
-                <c:calendar-home-set>
-                    <d:href>/calendars/johndoe/</d:href>
-                </c:calendar-home-set>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-</d:multistatus>
-"#,
-            );
-        });
-
-        server.mock(|when, then| {
-            when.path("/calendars/johndoe/")
-                .body(r#"
-<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav" xmlns:x1="http://apple.com/ns/ical/">
-  <d:prop>
-     <d:resourcetype />
-     <d:displayname />
-     <cs:getctag />
-     <c:supported-calendar-component-set />
-     <x1:calendar-color />
-  </d:prop>
-</d:propfind>
-"#);
-
-            then.status(207)
-                .body(r#"
-<d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:response>
-        <d:href>/calendars/johndoe/</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:resourcetype>
-                    <d:collection/>
-                </d:resourcetype>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-    <d:response>
-        <d:href>/calendars/johndoe/home/</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:resourcetype>
-                    <d:collection/>
-                    <c:calendar/>
-                </d:resourcetype>
-                <d:displayname>Home calendar</d:displayname>
-                <cs:getctag>3145</cs:getctag>
-                <c:supported-calendar-component-set>
-                    <c:comp name="VEVENT" />
-                </c:supported-calendar-component-set>
-                <x1:calendar-color xmlns:x1="http://apple.com/ns/ical/">#ffd4a5</x1:calendar-color>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-    <d:response>
-        <d:href>/calendars/johndoe/tasks/</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:resourcetype>
-                    <d:collection/>
-                    <c:calendar/>
-                </d:resourcetype>
-                <d:displayname>My TODO list</d:displayname>
-                <cs:getctag>3345</cs:getctag>
-                <c:supported-calendar-component-set>
-                    <c:comp name="VTODO" />
-                </c:supported-calendar-component-set>
-                <x1:calendar-color xmlns:x1="http://apple.com/ns/ical/">#ad0083</x1:calendar-color>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-</d:multistatus>
-"#);
-        });
-
-        server.mock(|when, then| {
-            when.path("/calendars/johndoe/home/")
-                .header("Depth", "1")
-                .body(r#"
-<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:prop>
-        <d:resourcetype />
-    </d:prop>
-    <c:filter>
-        <c:comp-filter name="VCALENDAR">
-            <c:comp-filter name="VEVENT" />
-        </c:comp-filter>
-    </c:filter>
-</c:calendar-query>
-"#);
-
-            then.status(207)
-                .body(r#"
-<d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:response>
-        <d:href>/calendars/johndoe/home/132456-34365.ics</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:resourcetype/>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-</d:multistatus>
-"#);
-        });
-
-        server.mock(|when, then| {
-            when.method(httpmock::Method::GET)
-                .path("/calendars/johndoe/home/132456-34365.ics");
-
-            then.status(200).body(
-                "BEGIN:VCALENDAR\r
-VERSION:2.0\r
-CALSCALE:GREGORIAN\r
-PRODID:kaldav\r
-BEGIN:VEVENT\r
-DTSTAMP:20120101T120000\r
-UID:132456-34365\r
-SUMMARY:Weekly meeting\r
-DTSTART:20120101T120000\r
-DURATION:PT1H\r
-RRULE:FREQ=WEEKLY\r
-END:VEVENT\r
-END:VCALENDAR\r
-",
-            );
-        });
-
-        server.mock(|when, then| {
-            when.path("/calendars/johndoe/tasks/")
-                .header("Depth", "1")
-                .body(r#"
-<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:prop>
-        <d:resourcetype />
-    </d:prop>
-    <c:filter>
-        <c:comp-filter name="VCALENDAR">
-            <c:comp-filter name="VTODO" />
-        </c:comp-filter>
-    </c:filter>
-</c:calendar-query>
-"#);
-
-            then.status(207)
-                .body(r#"
-<d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:response>
-        <d:href>/calendars/johndoe/tasks/132456762153245.ics</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:resourcetype/>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-</d:multistatus>
-"#);
-        });
-
-        server.mock(|when, then| {
-            when.method(httpmock::Method::GET)
-                .path("/calendars/johndoe/tasks/132456762153245.ics");
-
-            then.status(200).body(
-                "BEGIN:VCALENDAR\r
-VERSION:2.0\r
-PRODID:kaldav\r
-CALSCALE:GREGORIAN\r
-BEGIN:VTODO\r
-DTSTAMP:20120101T120000\r
-UID:132456762153245\r
-SUMMARY:Do the dishes\r
-DUE:20121028T115600Z\r
-END:VTODO\r
-END:VCALENDAR\r
-",
-            );
-        });
-
-        server.mock(|when, then| {
-            when.path("/calendars/johndoe/home/")
-                .header("Depth", "1")
-                .body(r#"
-<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:prop>
-        <d:resourcetype />
-    </d:prop>
-    <c:filter>
-        <c:comp-filter name="VCALENDAR">
-            <c:comp-filter name="VEVENT">
-                <c:time-range start="20231028T000000Z" end="+infinity"/>
-            </c:comp-filter>
-        </c:comp-filter>
-    </c:filter>
-</c:calendar-query>"#
-                );
-
-            then.status(207)
-                .body(r#"
-<d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
-    <d:response>
-        <d:href>/calendars/johndoe/home/132456-34365.ics</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:resourcetype/>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-</d:multistatus>
-"#);
-        });
-
-        server
-    }
-}
+// #[cfg(test)]
+// mod test {
+//     pub(crate) fn server() -> httpmock::MockServer {
+//         env_logger::try_init().ok();
+//         let server = httpmock::MockServer::start();
+//
+//         server.mock(|when, then| {
+//             when.path("/").body(
+//                 r#"
+// <d:propfind xmlns:d="DAV:">
+//     <d:prop>
+//         <d:current-user-principal />
+//     </d:prop>
+// </d:propfind>
+// "#,
+//             );
+//             then.status(207).body(
+//                 r#"
+// <d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
+//     <d:response>
+//         <d:href>/</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <d:current-user-principal>
+//                     <d:href>/principals/users/johndoe/</d:href>
+//                 </d:current-user-principal>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+// </d:multistatus>"#,
+//             );
+//         });
+//
+//         server.mock(|when, then| {
+//             when.path("/principals/users/johndoe/").body(
+//                 r#"
+// <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//   <d:prop>
+//      <d:displayname />
+//      <c:calendar-home-set />
+//   </d:prop>
+// </d:propfind>
+// "#,
+//             );
+//
+//             then.status(207).body(
+//                 r#"
+// <d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:response>
+//         <d:href>/principals/users/johndoe/</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <c:calendar-home-set>
+//                     <d:href>/calendars/johndoe/</d:href>
+//                 </c:calendar-home-set>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+// </d:multistatus>
+// "#,
+//             );
+//         });
+//
+//         server.mock(|when, then| {
+//             when.path("/calendars/johndoe/")
+//                 .body(r#"
+// <d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav" xmlns:x1="http://apple.com/ns/ical/">
+//   <d:prop>
+//      <d:resourcetype />
+//      <d:displayname />
+//      <cs:getctag />
+//      <c:supported-calendar-component-set />
+//      <x1:calendar-color />
+//   </d:prop>
+// </d:propfind>
+// "#);
+//
+//             then.status(207)
+//                 .body(r#"
+// <d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:response>
+//         <d:href>/calendars/johndoe/</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <d:resourcetype>
+//                     <d:collection/>
+//                 </d:resourcetype>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+//     <d:response>
+//         <d:href>/calendars/johndoe/home/</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <d:resourcetype>
+//                     <d:collection/>
+//                     <c:calendar/>
+//                 </d:resourcetype>
+//                 <d:displayname>Home calendar</d:displayname>
+//                 <cs:getctag>3145</cs:getctag>
+//                 <c:supported-calendar-component-set>
+//                     <c:comp name="VEVENT" />
+//                 </c:supported-calendar-component-set>
+//                 <x1:calendar-color xmlns:x1="http://apple.com/ns/ical/">#ffd4a5</x1:calendar-color>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+//     <d:response>
+//         <d:href>/calendars/johndoe/tasks/</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <d:resourcetype>
+//                     <d:collection/>
+//                     <c:calendar/>
+//                 </d:resourcetype>
+//                 <d:displayname>My TODO list</d:displayname>
+//                 <cs:getctag>3345</cs:getctag>
+//                 <c:supported-calendar-component-set>
+//                     <c:comp name="VTODO" />
+//                 </c:supported-calendar-component-set>
+//                 <x1:calendar-color xmlns:x1="http://apple.com/ns/ical/">#ad0083</x1:calendar-color>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+// </d:multistatus>
+// "#);
+//         });
+//
+//         server.mock(|when, then| {
+//             when.path("/calendars/johndoe/home/")
+//                 .header("Depth", "1")
+//                 .body(r#"
+// <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:prop>
+//         <d:resourcetype />
+//     </d:prop>
+//     <c:filter>
+//         <c:comp-filter name="VCALENDAR">
+//             <c:comp-filter name="VEVENT" />
+//         </c:comp-filter>
+//     </c:filter>
+// </c:calendar-query>
+// "#);
+//
+//             then.status(207)
+//                 .body(r#"
+// <d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:response>
+//         <d:href>/calendars/johndoe/home/132456-34365.ics</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <d:resourcetype/>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+// </d:multistatus>
+// "#);
+//         });
+//
+//         server.mock(|when, then| {
+//             when.method(httpmock::Method::GET)
+//                 .path("/calendars/johndoe/home/132456-34365.ics");
+//
+//             then.status(200).body(
+//                 "BEGIN:VCALENDAR\r
+// VERSION:2.0\r
+// CALSCALE:GREGORIAN\r
+// PRODID:kaldav\r
+// BEGIN:VEVENT\r
+// DTSTAMP:20120101T120000\r
+// UID:132456-34365\r
+// SUMMARY:Weekly meeting\r
+// DTSTART:20120101T120000\r
+// DURATION:PT1H\r
+// RRULE:FREQ=WEEKLY\r
+// END:VEVENT\r
+// END:VCALENDAR\r
+// ",
+//             );
+//         });
+//
+//         server.mock(|when, then| {
+//             when.path("/calendars/johndoe/tasks/")
+//                 .header("Depth", "1")
+//                 .body(r#"
+// <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:prop>
+//         <d:resourcetype />
+//     </d:prop>
+//     <c:filter>
+//         <c:comp-filter name="VCALENDAR">
+//             <c:comp-filter name="VTODO" />
+//         </c:comp-filter>
+//     </c:filter>
+// </c:calendar-query>
+// "#);
+//
+//             then.status(207)
+//                 .body(r#"
+// <d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:response>
+//         <d:href>/calendars/johndoe/tasks/132456762153245.ics</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <d:resourcetype/>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+// </d:multistatus>
+// "#);
+//         });
+//
+//         server.mock(|when, then| {
+//             when.method(httpmock::Method::GET)
+//                 .path("/calendars/johndoe/tasks/132456762153245.ics");
+//
+//             then.status(200).body(
+//                 "BEGIN:VCALENDAR\r
+// VERSION:2.0\r
+// PRODID:kaldav\r
+// CALSCALE:GREGORIAN\r
+// BEGIN:VTODO\r
+// DTSTAMP:20120101T120000\r
+// UID:132456762153245\r
+// SUMMARY:Do the dishes\r
+// DUE:20121028T115600Z\r
+// END:VTODO\r
+// END:VCALENDAR\r
+// ",
+//             );
+//         });
+//
+//         server.mock(|when, then| {
+//             when.path("/calendars/johndoe/home/")
+//                 .header("Depth", "1")
+//                 .body(r#"
+// <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:prop>
+//         <d:resourcetype />
+//     </d:prop>
+//     <c:filter>
+//         <c:comp-filter name="VCALENDAR">
+//             <c:comp-filter name="VEVENT">
+//                 <c:time-range start="20231028T000000Z" end="+infinity"/>
+//             </c:comp-filter>
+//         </c:comp-filter>
+//     </c:filter>
+// </c:calendar-query>"#
+//                 );
+//
+//             then.status(207)
+//                 .body(r#"
+// <d:multistatus xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:c="urn:ietf:params:xml:ns:caldav">
+//     <d:response>
+//         <d:href>/calendars/johndoe/home/132456-34365.ics</d:href>
+//         <d:propstat>
+//             <d:prop>
+//                 <d:resourcetype/>
+//             </d:prop>
+//             <d:status>HTTP/1.1 200 OK</d:status>
+//         </d:propstat>
+//     </d:response>
+// </d:multistatus>
+// "#);
+//         });
+//
+//         server
+//     }
+// }

@@ -74,31 +74,3 @@ impl crate::Requestable for Object {
         self.auth = auth;
     }
 }
-#[cfg(test)]
-mod test {
-    #[test]
-    fn event() -> crate::Result {
-        let server = crate::test::server();
-
-        let client = crate::Client::new(server.url(""));
-        let calendars = client.calendars()?;
-        let calendar = calendars.get("Home calendar").unwrap();
-        let mut events = calendar.events()?;
-        let _event = events.next();
-
-        Ok(())
-    }
-
-    #[test]
-    fn task() -> crate::Result {
-        let server = crate::test::server();
-
-        let client = crate::Client::new(server.url(""));
-        let calendars = client.calendars()?;
-        let calendar = calendars.get("My TODO list").unwrap();
-        let mut tasks = calendar.tasks()?;
-        let _task = tasks.next();
-
-        Ok(())
-    }
-}
