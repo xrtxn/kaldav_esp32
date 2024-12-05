@@ -15,9 +15,9 @@ pub use result::*;
 pub use ikal as ical;
 
 use base64::Engine;
-use embedded_svc::http::{client::Client as HttpClient, Method};
+use embedded_svc::http::client::Client as HttpClient;
 use embedded_svc::utils::io;
-use esp_idf_svc::http::client::{Configuration as HttpConfiguration, EspHttpConnection};
+use esp_idf_svc::http::client::{Configuration as HttpConfiguration, EspHttpConnection, Method};
 use esp_idf_svc::io::Write;
 use kaldav_derive::*;
 use std::collections::BTreeMap;
@@ -98,6 +98,9 @@ pub trait Requestable {
             );
             converted_headers.push(("Authorization", auth_header.as_str()));
         }
+        let body = body.unwrap();
+        let binding = body.len().to_string();
+        converted_headers.push(("Content-Length", binding.as_str()));
 
         println!("Headers: {:?}", converted_headers);
 
@@ -108,9 +111,8 @@ pub trait Requestable {
             _ => panic!("Method not supported"),
         };
 
-        // let mut request = client.request(req_method, href.as_str(), &converted_headers)?;
-        let mut request = client.request(Method::Post, href.as_str(), &converted_headers)?;
-        request.write_all(body.unwrap().as_bytes())?;
+        let mut request = client.request(req_method, href.as_str(), &converted_headers)?;
+        request.write_all(body.as_bytes())?;
         request.flush()?;
 
         let mut response = request.submit()?;
